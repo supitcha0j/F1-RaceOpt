@@ -13,21 +13,31 @@
   {%- endif -%}
 {%- endmacro -%}
 
-{%- macro seq(c1, c2) -%}
-<span class="seq">{{ cmp(c1) }}<span class="seq-arrow" aria-hidden="true">›</span>{{ cmp(c2) }}</span>
+{%- macro seq(c1, c2, c3) -%}
+<span class="seq">{{ cmp(c1) }}<span class="seq-arrow" aria-hidden="true">›</span>{{ cmp(c2) }}{% if c3 %}<span class="seq-arrow" aria-hidden="true">›</span>{{ cmp(c3) }}{% endif %}</span>
 {%- endmacro -%}
 
-{%- macro stintbar(total, p1, c1, c2) -%}
+{%- macro stintbar(total, p1, p2, c1, c2, c3) -%}
 {%- set t = total if total and total > 0 else 1 -%}
 {%- set a = p1 if p1 and p1 < t else t -%}
+{%- set b = p2 if p2 and p2 > a and p2 < t else 0 -%}
 <div class="stint">
-  <div class="stint-track" role="img" aria-label="Stint plan: {{ c1 }} ถึง lap {{ a }}, {{ c2 }} ถึง lap {{ t }}">
+  <div class="stint-track" role="img"
+       aria-label="Stint plan: {{ c1 }} ถึง lap {{ a }}{% if b %}, {{ c2 }} ถึง lap {{ b }}, {{ c3 or 'HARD' }} ถึง lap {{ t }}{% else %}, {{ c2 }} ถึง lap {{ t }}{% endif %}">
     <span class="stint-seg s-{{ (c1 or 'medium')|lower }}" style="width: {{ "%.3f"|format(a / t * 100) }}%"></span>
+    {%- if b %}
+    <span class="stint-seg s-{{ (c2 or 'soft')|lower }}" style="width: {{ "%.3f"|format((b - a) / t * 100) }}%"></span>
+    <span class="stint-seg s-{{ (c3 or 'hard')|lower }}" style="width: {{ "%.3f"|format((t - b) / t * 100) }}%"></span>
+    {%- else %}
     <span class="stint-seg s-{{ (c2 or 'soft')|lower }}" style="width: {{ "%.3f"|format((t - a) / t * 100) }}%"></span>
+    {%- endif %}
   </div>
   <div class="stint-axis">
     <span class="l">L1</span>
     <span class="stint-pit" style="left: {{ "%.3f"|format(a / t * 100) }}%">PIT {{ a }}</span>
+    {%- if b %}
+    <span class="stint-pit" style="left: {{ "%.3f"|format(b / t * 100) }}%">PIT {{ b }}</span>
+    {%- endif %}
     <span class="r">L{{ t }}</span>
   </div>
 </div>
@@ -83,7 +93,7 @@
           </div>
 
           <div class="field" style="margin-top: 16px">
-            <label for="pit_lap">รอบที่เข้าพิท</label>
+            <label for="pit_lap">รอบที่เข้าพิท (ครั้งที่ 1)</label>
             <input type="number" name="pit_lap" id="pit_lap"
               min="2" max="{{ total_laps - 2 }}"
               value="{{ form_data.pit_lap if form_data else 20 }}"
@@ -91,7 +101,36 @@
             <p class="hint" id="pit_lap_hint">Lap 2 – {{ total_laps - 2 }} · สนามนี้ {{ total_laps }} laps</p>
           </div>
 
-          <button type="submit" class="btn block" style="margin-top: 20px">จำลองกลยุทธ์</button>
+          <div class="field" style="margin-top: 16px">
+            <label for="num_stops">จำนวนครั้งพิท</label>
+            <select name="num_stops" id="num_stops">
+              <option value="1" {% if not form_data or form_data.num_stops == 1 %}selected{% endif %}>1 stop</option>
+              <option value="2" {% if form_data and form_data.num_stops == 2 %}selected{% endif %}>2 stops</option>
+            </select>
+          </div>
+
+          <div id="two_stop_fields" hidden>
+            <div class="field" style="margin-top: 16px">
+              <label for="second_pit_lap">รอบที่เข้าพิท (ครั้งที่ 2)</label>
+              <input type="number" name="second_pit_lap" id="second_pit_lap"
+                min="4" max="{{ total_laps - 2 }}"
+                value="{{ form_data.second_pit_lap if form_data and form_data.second_pit_lap else (total_laps - 15) }}" />
+            </div>
+
+            <div class="field" style="margin-top: 16px">
+              <label for="third_compound">ยาง stint ที่ 3</label>
+              <select name="third_compound" id="third_compound">
+                <option value="SOFT"   {% if form_data and form_data.third == 'SOFT'   %}selected{% endif %}>SOFT · C3</option>
+                <option value="MEDIUM" {% if form_data and form_data.third == 'MEDIUM' %}selected{% endif %}>MEDIUM · C2</option>
+                <option value="HARD"   {% if not form_data or not form_data.third or form_data.third == 'HARD' %}selected{% endif %}>HARD · C1</option>
+              </select>
+            </div>
+          </div>
+
+          <button type="submit" class="btn block" style="margin-top: 20px">
+            จำลองกลยุทธ์
+            <svg class="btn-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+          </button>
         </form>
       </div>
       <div class="panel-foot">
@@ -108,7 +147,12 @@
     <div class="panel accent">
       <div class="panel-head">
         <h2 class="panel-title">ผลการจำลอง</h2>
-        <span class="panel-note push">{{ race_label }} · {{ total_laps }} laps</span>
+        <span class="panel-note push">
+          {{ race_label }} · {{ total_laps }} laps
+          {% if result.weather %} · {{ "WET" if result.weather.wet else "DRY" }} · {{ result.weather.track_temp }}°C track{% endif %}
+          {% if result.incidents and (result.incidents.safety_car or result.incidents.vsc or result.incidents.red_flag) %} · {% if result.incidents.red_flag %}Red flag{% elif result.incidents.safety_car %}Safety Car{% else %}VSC{% endif %}{% endif %}
+          · pit loss ~{{ "%.1f"|format(result.pit_loss) }}s
+        </span>
       </div>
       <div class="panel-body">
         <div class="split">
@@ -116,7 +160,7 @@
           <div>
             <p class="eyebrow muted">อันดับที่ได้</p>
             <div class="row" style="margin-top: 6px; gap: 18px">
-              <span class="rank-big {% if result.rank == 1 %}lead{% endif %}">P{{ result.rank }}</span>
+              <span class="rank-big {% if result.rank == 1 %}lead{% endif %}" data-prefix="P" data-countup="{{ result.rank }}">P{{ result.rank }}</span>
               <span class="kv">จาก <b>{{ leaderboard|length }}</b> คัน</span>
             </div>
 
@@ -124,17 +168,17 @@
 
             <p class="eyebrow muted">กลยุทธ์ของคุณ</p>
             <div class="row" style="margin-top: 8px">
-              {{ seq(result.start, result.second) }}
-              <span class="big">{{ result.start }} › {{ result.second }}</span>
+              {{ seq(result.start, result.second, result.third) }}
+              <span class="big">{{ result.start }} › {{ result.second }}{% if result.third %} › {{ result.third }}{% endif %}</span>
             </div>
 
             <div style="margin-top: 18px">
-              {{ stintbar(total_laps, result.pit_lap, result.start, result.second) }}
+              {{ stintbar(total_laps, result.pit_lap, result.second_pit_lap, result.start, result.second, result.third) }}
             </div>
 
             <div class="row" style="margin-top: 14px">
-              <span class="kv">Pit lap <b>{{ result.pit_lap }}</b></span>
-              <span class="kv">Stops <b>1</b></span>
+              <span class="kv">Pit lap <b>{{ result.pit_lap }}{% if result.second_pit_lap %} / {{ result.second_pit_lap }}{% endif %}</b></span>
+              <span class="kv">Stops <b>{{ result.num_stops }}</b></span>
             </div>
           </div>
 
@@ -163,7 +207,7 @@
             </div>
 
             <p class="metric-k" style="margin-top: 16px">Win probability</p>
-            <p class="big" style="margin-top: 4px">{{ result.win_prob_pct }}%</p>
+            <p class="big" style="margin-top: 4px" data-countup="{{ result.win_prob_pct }}" data-suffix="%">{{ result.win_prob_pct }}%</p>
             <div class="meter" style="margin-top: 8px">
               <div class="meter-fill" style="width: {{ result.win_prob_bar }}%"></div>
             </div>
@@ -184,6 +228,7 @@
             <tr>
               <th scope="col" style="width: 48px">Pos</th>
               <th scope="col">Driver</th>
+              <th scope="col" class="t-ctr col-opt">Grid</th>
               <th scope="col">Compound</th>
               <th scope="col" class="t-ctr col-opt">Pit</th>
               <th scope="col" class="t-num">Total</th>
@@ -192,17 +237,18 @@
           </thead>
           <tbody>
             {% for r in leaderboard %}
-            <tr {% if r.is_user %}class="marked"{% endif %}>
+            <tr class="race-in {% if r.is_user %}marked{% endif %}" style="animation-delay: {{ (loop.index0 if loop.index0 < 10 else 10) * 0.025 }}s">
               <td class="rk {% if r.rank == 1 %}lead{% elif not r.is_user %}fg2{% endif %}">{{ r.rank }}</td>
               <td>
                 {% if r.is_user %}<span class="lead" style="font-weight: 600">YOU</span>
                 {% else %}<span style="font-weight: 500">{{ r.code }}</span>{% endif %}
               </td>
+              <td class="t-ctr col-opt dim">{% if r.is_user %}—{% else %}P{{ r.grid }}{% endif %}</td>
               <td>
-                {{ seq(r.start, r.second) }}
-                <span class="seq-text">{{ r.start }} › {{ r.second }}</span>
+                {{ seq(r.start, r.second, r.third) }}
+                <span class="seq-text">{{ r.start }} › {{ r.second }}{% if r.third %} › {{ r.third }}{% endif %}</span>
               </td>
-              <td class="t-ctr col-opt dim">{{ r.pit_lap }}</td>
+              <td class="t-ctr col-opt dim">{{ r.pit_lap }}{% if r.second_pit_lap %} / {{ r.second_pit_lap }}{% endif %}</td>
               <td class="t-num">
                 {{ hms(r.total_time) }}
                 <span class="sub">{{ "%.1f"|format(r.total_time) }} s</span>
@@ -229,4 +275,18 @@
 
   </div>
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  // แสดงฟิลด์ pit ครั้งที่ 2 / ยาง stint 3 เฉพาะตอนเลือก 2 stops — ไม่รกฟอร์มตอน 1 stop
+  (function () {
+    var numStops   = document.getElementById("num_stops");
+    var twoStopBox = document.getElementById("two_stop_fields");
+    if (!numStops || !twoStopBox) return;
+    function sync() { twoStopBox.hidden = numStops.value !== "2"; }
+    numStops.addEventListener("change", sync);
+    sync();
+  })();
+</script>
 {% endblock %}

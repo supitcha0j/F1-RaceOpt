@@ -8,7 +8,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans+Thai:wght@400;500;600;700&display=swap"
+      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans+Thai:wght@400;500;600;700&family=IBM+Plex+Sans+Condensed:ital,wght@0,600;0,700;1,600;1,700&display=swap"
       rel="stylesheet" />
     <style>
       /* ─────────────────────────────────────────────
@@ -37,12 +37,16 @@
         --medium:    #D9B23A;
         --hard:      #DDE0E5;
 
-        --sans: "IBM Plex Sans Thai", system-ui, -apple-system, "Segoe UI", sans-serif;
-        --mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+        --sans:    "IBM Plex Sans Thai", system-ui, -apple-system, "Segoe UI", sans-serif;
+        --mono:    "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+        --display: "IBM Plex Sans Condensed", var(--sans);
 
         --r:  3px;
         --r2: 5px;
         --gut: clamp(16px, 3vw, 28px);
+
+        --cut: 12px;   /* corner-cut size for angled panels/buttons */
+        --ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
       }
 
       *, *::before, *::after { box-sizing: border-box; }
@@ -123,8 +127,8 @@
         text-decoration: none;
       }
       .brand-mark {
-        font: 600 15px/1 var(--mono);
-        letter-spacing: 0.12em;
+        font: 700 17px/1 var(--display);
+        letter-spacing: 0.04em;
         text-transform: uppercase;
       }
       .brand-mark::before {
@@ -189,8 +193,13 @@
         color: var(--red);
       }
       .eyebrow.muted { color: var(--fg-3); }
-      .page-title { font-size: clamp(22px, 3.4vw, 30px); margin-top: 8px; }
-      .lede { margin-top: 8px; color: var(--fg-2); max-width: 68ch; }
+      .page-title {
+        font: 700 clamp(26px, 4.2vw, 38px)/1.08 var(--display);
+        letter-spacing: 0.001em;
+        text-transform: uppercase;
+        margin-top: 8px;
+      }
+      .lede { margin-top: 10px; color: var(--fg-2); max-width: 68ch; }
 
       /* ── Spec bar: circuit / driver / laps readout ── */
       .specbar {
@@ -226,11 +235,23 @@
         margin-bottom: 14px;
       }
       .section-no {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
         font: 500 11px/1.6 var(--mono);
         letter-spacing: 0.12em;
         color: var(--red);
       }
-      .section-title { font-size: 15px; }
+      /* racing-line tick: a small diagonal dash ahead of every section number */
+      .section-no::before {
+        content: "";
+        width: 10px;
+        height: 2px;
+        background: var(--red);
+        transform: skewX(-25deg);
+        flex: 0 0 auto;
+      }
+      .section-title { font: 600 16px/1.3 var(--display); letter-spacing: 0.002em; }
       .section-note { margin-left: auto; font: 400 11.5px/1.6 var(--mono); color: var(--fg-3); }
       .section-sub { margin: -4px 0 14px; font-size: 12.5px; color: var(--fg-2); }
 
@@ -240,7 +261,10 @@
         border: 1px solid var(--line);
         border-radius: var(--r);
       }
-      .panel.accent { border-left: 2px solid var(--red); }
+      .panel.accent {
+        border-left: 2px solid var(--red);
+        clip-path: polygon(0 0, calc(100% - var(--cut)) 0, 100% var(--cut), 100% 100%, 0 100%);
+      }
       .panel-head {
         padding: 12px 16px;
         border-bottom: 1px solid var(--line);
@@ -469,25 +493,45 @@
       select:hover, input[type="number"]:hover { border-color: var(--fg-3); }
       select:focus-visible, input[type="number"]:focus-visible { border-color: var(--red-hi); }
 
+      /* .btn's angled backdrop lives on ::before (not on .btn itself) so the
+         focus-visible outline below stays a plain, fully-visible rectangle —
+         clip-path on the focused element itself can clip its own outline. */
       .btn {
+        position: relative;
+        isolation: isolate;
         display: inline-flex;
         align-items: center;
         justify-content: center;
         gap: 8px;
-        padding: 10px 20px;
+        padding: 10px 18px 10px 20px;
+        border: none;
+        border-radius: var(--r);
+        background: transparent;
+        color: #fff;
+        font: 700 12px/1 var(--display);
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        text-decoration: none;
+        cursor: pointer;
+      }
+      .btn::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        z-index: -1;
+        background: var(--red);
         border: 1px solid var(--red);
         border-radius: var(--r);
-        background: var(--red);
-        color: #fff;
-        font-size: 12px;
-        font-weight: 600;
-        letter-spacing: 0.12em;
-        text-transform: uppercase;
-        cursor: pointer;
+        clip-path: polygon(0 0, calc(100% - 10px) 0, 100% 100%, 0 100%);
         transition: background 0.12s ease, border-color 0.12s ease;
       }
-      .btn:hover { background: var(--red-hi); border-color: var(--red-hi); }
+      .btn:hover::before { background: var(--red-hi); border-color: var(--red-hi); }
       .btn.block { width: 100%; }
+      .btn-arrow { display: inline-flex; transition: transform 0.15s var(--ease-out); }
+      .btn:hover .btn-arrow { transform: translateX(3px); }
+      .btn.ghost { color: var(--fg); }
+      .btn.ghost::before { background: transparent; border-color: var(--line-2); }
+      .btn.ghost:hover::before { background: var(--surface-2); border-color: var(--fg-3); }
 
       /* ── Notices ───────────────────────────────── */
       .notice {
@@ -574,10 +618,86 @@
       .kv b { font-weight: 500; color: var(--fg); }
 
       /* ── Readout typography ───────────────────── */
-      .big { font: 500 clamp(17px, 2.6vw, 21px)/1.25 var(--mono); letter-spacing: 0.02em; }
-      .gain-big { font: 500 clamp(28px, 5vw, 40px)/1.05 var(--mono); letter-spacing: -0.02em; }
-      .rank-big { font: 600 clamp(38px, 7vw, 56px)/1 var(--mono); letter-spacing: -0.03em; }
+      .big { font: 600 clamp(17px, 2.6vw, 21px)/1.25 var(--mono); letter-spacing: 0.02em; }
+      .gain-big { font: 700 clamp(28px, 5vw, 40px)/1.05 var(--mono); letter-spacing: -0.02em; }
+      .rank-big { font: 700 clamp(38px, 7vw, 56px)/1 var(--mono); letter-spacing: -0.03em; }
       .divider { border-top: 1px solid var(--line); margin: 14px 0; }
+
+      /* ── Racing motifs: texture + dividers (CSS-drawn, no images) ── */
+      .carbon {
+        background-color: var(--bg-sunk);
+        background-image:
+          repeating-linear-gradient(45deg,  rgba(255,255,255,0.028) 0 1px, transparent 1px 5px),
+          repeating-linear-gradient(-45deg, rgba(255,255,255,0.028) 0 1px, transparent 1px 5px);
+      }
+      .chk {
+        display: inline-block;
+        width: 32px;
+        height: 8px;
+        flex: 0 0 auto;
+        background-image:
+          linear-gradient(45deg, var(--fg-2) 25%, transparent 25%, transparent 75%, var(--fg-2) 75%),
+          linear-gradient(45deg, var(--fg-2) 25%, transparent 25%, transparent 75%, var(--fg-2) 75%);
+        background-size: 4px 4px;
+        background-position: 0 0, 2px 2px;
+        opacity: 0.5;
+      }
+      .divider-flag {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin: 28px 0;
+        border-top: 1px solid var(--line);
+        padding-top: 10px;
+      }
+      .divider-flag .chk { margin-left: auto; }
+
+      /* ── Hero (entry page only) ─────────────────── */
+      .hero {
+        position: relative;
+        overflow: hidden;
+        border: 1px solid var(--line);
+        border-radius: var(--r);
+        clip-path: polygon(0 0, 100% 0, 100% calc(100% - 22px), calc(100% - 22px) 100%, 0 100%);
+        padding: clamp(28px, 5vw, 48px) clamp(20px, 4vw, 40px);
+      }
+      .hero-headline {
+        font: 700 clamp(30px, 6vw, 52px)/1.04 var(--display);
+        text-transform: uppercase;
+        letter-spacing: 0.001em;
+        max-width: 16ch;
+      }
+      .hero-headline .hl {
+        position: relative;
+        color: var(--red);
+        white-space: nowrap;
+      }
+      .hero-bar {
+        display: inline-block;
+        width: 46px;
+        height: 4px;
+        background: var(--red);
+        transform: skewX(-25deg);
+        margin-bottom: 14px;
+      }
+      .hero-lede { margin-top: 14px; max-width: 56ch; color: var(--fg-2); font-size: 14.5px; }
+      .hero-actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 24px; }
+
+      /* ── Motion: fast, transform-only, capped stagger ─────────
+         Killed globally by the prefers-reduced-motion rule above. */
+      @keyframes raceIn {
+        from { opacity: 0; transform: translateX(-14px); }
+        to   { opacity: 1; transform: translateX(0); }
+      }
+      .race-in { animation: raceIn 0.32s var(--ease-out) both; }
+
+      a.panel, .panel.hoverable {
+        transition: transform 0.15s var(--ease-out), border-color 0.15s var(--ease-out);
+      }
+      a.panel:hover, .panel.hoverable:hover {
+        transform: translateY(-2px);
+        border-color: var(--fg-3);
+      }
 
       .split { display: grid; gap: 20px; grid-template-columns: 1fr; }
       @media (min-width: 760px) {
@@ -643,6 +763,36 @@
         <span>Data: FastF1 lap telemetry</span>
       </div>
     </footer>
+
+    <script>
+      // Count-up on the headline instrument numbers (data-countup="<final value>").
+      // Renders the final value immediately under prefers-reduced-motion — this is
+      // a presentation flourish only, the DOM already holds the correct final text.
+      (function () {
+        var reduce = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
+        function countUp(el) {
+          var end = parseFloat(el.dataset.countup);
+          if (isNaN(end)) return;
+          var decimals = (el.dataset.countup.split(".")[1] || "").length;
+          var prefix = el.dataset.prefix || "";
+          var suffix = el.dataset.suffix || "";
+          if (reduce) return;
+          var dur = 600, t0 = null;
+          function step(ts) {
+            if (!t0) t0 = ts;
+            var p = Math.min((ts - t0) / dur, 1);
+            var eased = 1 - Math.pow(1 - p, 3);
+            el.textContent = prefix + (end * eased).toFixed(decimals) + suffix;
+            if (p < 1) requestAnimationFrame(step);
+            else el.textContent = prefix + end.toFixed(decimals) + suffix;
+          }
+          requestAnimationFrame(step);
+        }
+        document.addEventListener("DOMContentLoaded", function () {
+          document.querySelectorAll("[data-countup]").forEach(countUp);
+        });
+      })();
+    </script>
 
     {% block scripts %}{% endblock %}
   </body>

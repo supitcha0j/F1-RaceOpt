@@ -10,7 +10,7 @@ from sklearn.ensemble import RandomForestRegressor
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import mean_absolute_error, mean_squared_error
 
-from data_pipeline import load_multi_race_laps, AVAILABLE_RACES, AVAILABLE_DRIVERS
+from data_pipeline import load_multi_race_laps
 
 
 # ============================================================
@@ -18,17 +18,17 @@ from data_pipeline import load_multi_race_laps, AVAILABLE_RACES, AVAILABLE_DRIVE
 # เพิ่ม/ลดได้เลย (ยิ่งมาก = โมเดลแม่นยำขึ้น แต่ใช้เวลาโหลดนานขึ้น)
 # ============================================================
 TRAIN_COMBINATIONS = [
-    # (year, gp, driver)
-    (2023, "Bahrain", "VER"),
-    (2023, "Bahrain", "HAM"),
-    (2023, "Bahrain", "LEC"),
-    (2023, "Bahrain", "ALO"),
-    (2023, "Saudi Arabia", "VER"),
-    (2023, "Saudi Arabia", "PER"),
-    (2023, "Australia", "VER"),
-    (2023, "Australia", "HAM"),
-    (2022, "Bahrain", "LEC"),
-    (2022, "Bahrain", "VER"),
+    # (year, gp round number, driver) — ฤดูกาลล่าสุดที่แข่งจบแล้ว (2025)
+    (2025, 1, "VER"),   # Australian GP
+    (2025, 1, "NOR"),
+    (2025, 4, "VER"),   # Bahrain GP
+    (2025, 4, "HAM"),
+    (2025, 5, "VER"),   # Saudi Arabian GP
+    (2025, 5, "LEC"),
+    (2025, 8, "NOR"),   # Monaco GP
+    (2025, 8, "LEC"),
+    (2025, 12, "VER"),  # British GP
+    (2025, 12, "RUS"),
 ]
 
 

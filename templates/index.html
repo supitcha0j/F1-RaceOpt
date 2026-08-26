@@ -3,14 +3,25 @@
 
 {% block content %}
 
-<header class="page-head">
+<section class="hero carbon" aria-label="ภาพรวม RaceOpt">
+  <span class="hero-bar" aria-hidden="true"></span>
   <p class="eyebrow">Model validation report</p>
-  <h1 class="page-title">Model Performance</h1>
-  <p class="lede">
+  <h1 class="hero-headline">Race strategy, <span class="hl">validated by real data</span></h1>
+  <p class="hero-lede">
     รายงานตรวจสอบโมเดล Random Forest ที่ train จาก lap telemetry จริงของ FastF1 —
     แสดง configuration, feature ที่ใช้ และความคลาดเคลื่อนของเวลาที่จำลองได้เทียบกับเวลาจริง
   </p>
-</header>
+  <div class="hero-actions">
+    <a class="btn" href="{{ url_for('analysis_page') }}">
+      ดูกลยุทธ์ที่เร็วกว่า
+      <svg class="btn-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+    </a>
+    <a class="btn ghost" href="{{ url_for('play_strategy_page') }}">
+      ลองเล่น Strategy Lab
+      <svg class="btn-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+    </a>
+  </div>
+</section>
 
 <div class="notice notice-warn">
   <p class="notice-title">ขอบเขตของรายงาน</p>
@@ -27,24 +38,25 @@
   <div class="metrics cols-5">
     <div class="metric">
       <span class="metric-k">MAE</span>
-      <span class="metric-v">{{ "%.3f"|format(mae_overall) }}</span>
+      <span class="metric-v" data-countup="{{ "%.3f"|format(mae_overall) }}">{{ "%.3f"|format(mae_overall) }}</span>
       <span class="metric-u">s / lap · test set</span>
     </div>
     <div class="metric">
       <span class="metric-k">RMSE</span>
-      <span class="metric-v">{{ "%.3f"|format(rmse_overall) }}</span>
+      <span class="metric-v" data-countup="{{ "%.3f"|format(rmse_overall) }}">{{ "%.3f"|format(rmse_overall) }}</span>
       <span class="metric-u">s / lap · test set</span>
     </div>
     <div class="metric">
       <span class="metric-k">Avg deviation</span>
-      <span class="metric-v {% if avg_diff_pct|abs < 1 %}ok{% elif avg_diff_pct|abs < 3 %}warn{% else %}bad{% endif %}">
+      <span class="metric-v {% if avg_diff_pct|abs < 1 %}ok{% elif avg_diff_pct|abs < 3 %}warn{% else %}bad{% endif %}"
+            data-countup="{{ "%.2f"|format(avg_diff_pct) }}" data-suffix="%" data-prefix="{{ '+' if avg_diff_pct >= 0 else '' }}">
         {{ "%+.2f"|format(avg_diff_pct) }}%
       </span>
       <span class="metric-u">sim vs real · tolerance ±1%</span>
     </div>
     <div class="metric">
       <span class="metric-k">Laps evaluated</span>
-      <span class="metric-v">{{ total_laps_trained }}</span>
+      <span class="metric-v" data-countup="{{ total_laps_trained }}">{{ total_laps_trained }}</span>
       <span class="metric-u">{{ train_combos|length }} combinations</span>
     </div>
     <div class="metric">
@@ -113,6 +125,7 @@
             <th scope="col">Year</th>
             <th scope="col">Grand Prix</th>
             <th scope="col">Driver</th>
+            <th scope="col" class="t-ctr col-opt">Cond.</th>
             <th scope="col" class="t-ctr col-opt">Laps</th>
             <th scope="col" class="t-num">Real</th>
             <th scope="col" class="t-num">Sim</th>
@@ -123,11 +136,14 @@
         </thead>
         <tbody>
           {% for c in train_combos %}
-          <tr>
+          <tr class="race-in" style="animation-delay: {{ (loop.index0 if loop.index0 < 10 else 10) * 0.025 }}s">
             <td class="dim">{{ loop.index }}</td>
             <td>{{ c.year }}</td>
             <td class="wrap">{{ c.gp }}</td>
             <td style="font-weight: 500">{{ c.driver }}</td>
+            <td class="t-ctr col-opt">
+              {% if c.weather %}<span class="{% if c.weather.wet %}bad{% else %}dim{% endif %}">{{ "WET" if c.weather.wet else "DRY" }}</span>{% else %}<span class="dim">—</span>{% endif %}
+            </td>
             <td class="t-ctr col-opt dim">{{ c.laps }}</td>
             <td class="t-num">
               {{ "%d:%02d:%02d"|format((c.real_total//3600)|int,((c.real_total%3600)//60)|int,(c.real_total%60)|int) }}
@@ -150,7 +166,7 @@
         </tbody>
         <tfoot>
           <tr>
-            <td colspan="4">รวมทั้งหมด</td>
+            <td colspan="5">รวมทั้งหมด</td>
             <td class="t-ctr col-opt">{{ total_laps_trained }}</td>
             <td colspan="3"></td>
             <td class="t-num col-opt">{{ "%.3f"|format(mae_overall) }}</td>
@@ -218,6 +234,8 @@
     <div class="panel-foot">Spread = ผลต่างของ deviation ระหว่างสองนักแข่งในสนามเดียวกัน</div>
   </div>
 </section>
+
+<div class="divider-flag" role="presentation"><span class="chk" aria-hidden="true"></span></div>
 
 <!-- ═══ 04 · Model configuration ═══════════════════════════ -->
 <section aria-labelledby="cfg-h">

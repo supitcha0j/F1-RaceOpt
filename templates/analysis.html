@@ -76,7 +76,10 @@
           </select>
         </div>
         <div class="field">
-          <button type="submit" class="btn block">วิเคราะห์</button>
+          <button type="submit" class="btn block">
+            วิเคราะห์
+            <svg class="btn-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+          </button>
         </div>
       </form>
     </div>
@@ -96,8 +99,23 @@
   <div class="specbar">
     <div class="spec"><span class="spec-k">Circuit</span><span class="spec-v">{{ result.race_label }}</span></div>
     <div class="spec"><span class="spec-k">Driver</span><span class="spec-v">{{ result.driver }}</span></div>
+    <div class="spec"><span class="spec-k">Grid</span><span class="spec-v">P{{ result.grid_position }}</span></div>
     <div class="spec"><span class="spec-k">Distance</span><span class="spec-v">{{ result.total_laps }} laps</span></div>
     <div class="spec"><span class="spec-k">Real race time</span><span class="spec-v">{{ result.real_time }}</span></div>
+    {% if result.weather %}
+    <div class="spec">
+      <span class="spec-k">Conditions</span>
+      <span class="spec-v {% if result.weather.wet %}bad{% else %}ok{% endif %}">{{ "WET" if result.weather.wet else "DRY" }}</span>
+    </div>
+    <div class="spec"><span class="spec-k">Track temp</span><span class="spec-v">{{ result.weather.track_temp }}°C</span></div>
+    {% endif %}
+    {% if result.incidents and (result.incidents.safety_car or result.incidents.vsc or result.incidents.red_flag) %}
+    <div class="spec">
+      <span class="spec-k">Incidents</span>
+      <span class="spec-v warn">{% if result.incidents.red_flag %}Red flag{% elif result.incidents.safety_car %}Safety Car{% elif result.incidents.vsc %}VSC{% endif %}</span>
+    </div>
+    {% endif %}
+    <div class="spec"><span class="spec-k">Pit loss (est.)</span><span class="spec-v">{{ "%.1f"|format(result.pit_loss) }}s</span></div>
   </div>
 </section>
 
@@ -139,7 +157,7 @@
 
         <div>
           <p class="eyebrow muted">เร็วกว่าเวลาจริง</p>
-          <p class="gain-big ok" style="margin-top: 8px">−{{ "%.2f"|format(best.delta_sec|abs) }}<span class="big"> s</span></p>
+          <p class="gain-big ok" style="margin-top: 8px">−<span data-countup="{{ "%.2f"|format(best.delta_sec|abs) }}">{{ "%.2f"|format(best.delta_sec|abs) }}</span><span class="big"> s</span></p>
           <p class="kv" style="margin-top: 6px">−{{ "%.2f"|format(best.delta_pct|abs) }}% ของเวลารวม</p>
           <div class="divider"></div>
           <p class="kv">เวลาจริง <b>{{ "%.1f"|format(result.real_total) }} s</b></p>
@@ -181,7 +199,7 @@
         </thead>
         <tbody>
           {% for r in top_faster %}
-          <tr {% if loop.first %}class="marked"{% endif %}>
+          <tr class="race-in {% if loop.first %}marked{% endif %}" style="animation-delay: {{ (loop.index0 if loop.index0 < 10 else 10) * 0.025 }}s">
             <td class="rk {% if loop.first %}lead{% endif %}">{{ loop.index }}</td>
             <td>
               {{ seq(r.first_compound, r.second_compound, r.third_compound) }}
