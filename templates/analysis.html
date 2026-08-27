@@ -222,11 +222,56 @@
 </section>
 {% endif %}
 
-<!-- ═══ 03 · Parameter changes ══════════════════════════════ -->
+<!-- ═══ 03 · Undercut / Overcut ═════════════════════════════ -->
+{% if pit_tactics %}
+<section aria-labelledby="tac-h">
+  <div class="section-head">
+    <span class="section-no">03</span>
+    <h2 class="section-title" id="tac-h">Undercut / Overcut Analysis</h2>
+    <span class="section-note">baseline pit lap {{ baseline.pit_lap if baseline else '—' }}</span>
+  </div>
+  <p class="section-sub">
+    เทียบรอบพิทของแต่ละกลยุทธ์ที่เร็วกว่ากับ baseline — เข้าพิทเร็วกว่า (Undercut) คือยึด track position
+    ด้วยยางใหม่ก่อนคู่แข่ง เข้าพิทช้ากว่า (Overcut) คือ push ต่อด้วยยางเก่าแล้วออกมาเจอแทร็กโล่ง
+  </p>
+
+  <div class="panel">
+    <div class="tbl-wrap" tabindex="0" role="region" aria-label="ตาราง undercut overcut">
+      <table class="tbl">
+        <thead>
+          <tr>
+            <th scope="col">Tactic</th>
+            <th scope="col" class="t-ctr">Pit lap</th>
+            <th scope="col" class="t-ctr col-opt">vs baseline</th>
+            <th scope="col">Compound</th>
+            <th scope="col" class="t-num">Time gained</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for t in pit_tactics %}
+          <tr>
+            <td>
+              <span class="pill {% if t.tactic == 'Undercut' %}pill-undercut{% elif t.tactic == 'Overcut' %}pill-overcut{% else %}pill-neutral{% endif %}">{{ t.tactic }}</span>
+            </td>
+            <td class="t-ctr">{{ t.pit_lap }}{% if t.second_pit_lap %} / {{ t.second_pit_lap }}{% endif %}</td>
+            <td class="t-ctr col-opt dim">{{ "%+d"|format(t.pit_diff) }} laps</td>
+            <td>{{ seq(t.first_compound, t.second_compound, t.third_compound) }}</td>
+            <td class="t-num ok">−{{ "%.2f"|format(t.delta_sec|abs) }} s</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    <div class="panel-foot">vs baseline = ผลต่างรอบพิทเทียบ baseline (MEDIUM › SOFT · pit ~35%)</div>
+  </div>
+</section>
+{% endif %}
+
+<!-- ═══ 04 · Parameter changes ══════════════════════════════ -->
 {% if explanations %}
 <section aria-labelledby="param-h">
   <div class="section-head">
-    <span class="section-no">03</span>
+    <span class="section-no">04</span>
     <h2 class="section-title" id="param-h">Parameter ที่เปลี่ยนจาก baseline</h2>
     <span class="section-note">baseline MEDIUM › SOFT · pit ~35%</span>
   </div>
@@ -246,10 +291,10 @@
 </section>
 {% endif %}
 
-<!-- ═══ 04 · Model calibration ══════════════════════════════ -->
+<!-- ═══ 05 · Model calibration ══════════════════════════════ -->
 <section aria-labelledby="cal-h">
   <div class="section-head">
-    <span class="section-no">04</span>
+    <span class="section-no">05</span>
     <h2 class="section-title" id="cal-h">Model calibration</h2>
     <span class="section-note">pace offset {{ "%+.2f"|format(calibration.pace_offset) }} s/lap</span>
   </div>
@@ -292,8 +337,8 @@
     <div class="panel-body">
       <div class="chart h-md"><canvas id="lapChart"></canvas></div>
       <div class="legend" style="margin-top: 12px">
-        <span><i style="background: #C7CBD1"></i>เวลาจริง (FastF1)</span>
-        <span><i style="background: #E10600"></i>เวลาที่โมเดลทำนาย</span>
+        <span><i style="background: #AEB8CC"></i>เวลาจริง (FastF1)</span>
+        <span><i style="background: #E0143C"></i>เวลาที่โมเดลทำนาย</span>
       </div>
     </div>
   </div>
@@ -317,8 +362,8 @@
   const actualLaps = JSON.parse('{{ actual_laps | tojson | safe }}');
   const predLaps   = JSON.parse('{{ pred_laps   | tojson | safe }}');
 
-  const INK   = "#E9EAED";
-  const MUTED = "#71757F";
+  const INK   = "#E9EDF4";
+  const MUTED = "#67718A";
   const GRID  = "rgba(255,255,255,0.05)";
   const MONO  = "'IBM Plex Mono', ui-monospace, monospace";
 
@@ -334,15 +379,15 @@
         {
           label: "จริง",
           data: actualLaps,
-          borderColor: "#C7CBD1",
-          backgroundColor: "#C7CBD1",
+          borderColor: "#AEB8CC",
+          backgroundColor: "#AEB8CC",
           borderWidth: 1.5, tension: 0, pointRadius: 0, pointHitRadius: 8,
         },
         {
           label: "ทำนาย (หลัง calibrate)",
           data: predLaps,
-          borderColor: "#E10600",
-          backgroundColor: "#E10600",
+          borderColor: "#E0143C",
+          backgroundColor: "#E0143C",
           borderWidth: 1.5, tension: 0, pointRadius: 0, pointHitRadius: 8,
         },
       ],
@@ -354,8 +399,8 @@
       plugins: {
         legend: { display: false },
         tooltip: {
-          backgroundColor: "#0D0E10",
-          borderColor: "#3A3D45",
+          backgroundColor: "#070911",
+          borderColor: "#323C51",
           borderWidth: 1,
           titleColor: INK,
           bodyColor: INK,
@@ -375,13 +420,13 @@
           title: { display: true, text: "LAP", color: MUTED, font: { size: 10 } },
           ticks: { color: MUTED, maxRotation: 0, autoSkipPadding: 16 },
           grid: { color: GRID, drawTicks: false },
-          border: { color: "#3A3D45" },
+          border: { color: "#323C51" },
         },
         y: {
           title: { display: true, text: "LAP TIME (S)", color: MUTED, font: { size: 10 } },
           ticks: { color: MUTED },
           grid: { color: GRID, drawTicks: false },
-          border: { color: "#3A3D45" },
+          border: { color: "#323C51" },
         },
       },
     },

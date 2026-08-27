@@ -1,379 +1,517 @@
 {% extends "base.html" %}
-{% block title %}Model Report · RaceOpt{% endblock %}
+{% block title %}RaceOpt · F1 Strategy Overview{% endblock %}
+
+{#- ── Tyre + stint primitives (shared shape with analysis.html / play_strategy.html) ── -#}
+{%- macro cmp(c) -%}
+  {%- set u = (c or '')|upper -%}
+  {%- if u -%}
+  <span class="cmp cmp-{{ u|lower }}" title="{{ u }}"><span aria-hidden="true">{{ u[:1] }}</span><span class="sr-only">{{ u }}</span></span>
+  {%- endif -%}
+{%- endmacro -%}
+
+{%- macro seq(c1, c2, c3) -%}
+<span class="seq">{{ cmp(c1) }}{% if c2 %}<span class="seq-arrow" aria-hidden="true">›</span>{{ cmp(c2) }}{% endif %}{% if c3 %}<span class="seq-arrow" aria-hidden="true">›</span>{{ cmp(c3) }}{% endif %}</span>
+{%- endmacro -%}
+
+{#- Stint bar built from a real, arbitrary-length list of stints (not capped at 2 pit stops) -#}
+{%- macro stintbar_multi(total, stints) -%}
+{%- set t = total if total and total > 0 else 1 -%}
+<div class="stint">
+  <div class="stint-track" role="img"
+       aria-label="Stint จริง {{ stints|length }} stint จาก lap telemetry">
+    {%- for s in stints -%}
+    <span class="stint-seg s-{{ (s.compound or 'medium')|lower }}"
+          style="width: {{ "%.3f"|format((s.end_lap - s.start_lap + 1) / t * 100) }}%"
+          title="{{ s.compound }} · L{{ s.start_lap }}–{{ s.end_lap }}"></span>
+    {%- endfor -%}
+  </div>
+  <div class="stint-axis">
+    <span class="l">L1</span>
+    {%- for s in stints[:-1] -%}
+    <span class="stint-pit" style="left: {{ "%.3f"|format(s.end_lap / t * 100) }}%">PIT {{ s.end_lap }}</span>
+    {%- endfor -%}
+    <span class="r">L{{ t }}</span>
+  </div>
+</div>
+{%- endmacro -%}
 
 {% block content %}
 
-<section class="hero carbon" aria-label="ภาพรวม RaceOpt">
+<!-- ═══ 01 · Hero — latest race analysis ═══════════════════ -->
+<section class="hero carbon" aria-label="ภาพรวมสนามล่าสุด">
   <span class="hero-bar" aria-hidden="true"></span>
-  <p class="eyebrow">Model validation report</p>
-  <h1 class="hero-headline">Race strategy, <span class="hl">validated by real data</span></h1>
+  <p class="eyebrow">{% if analysis %}Latest analysed race{% else %}Race strategy overview{% endif %}</p>
+  <h1 class="hero-headline">
+    {% if analysis %}{{ analysis.result.race_label }} — <span class="hl">strategy read</span>
+    {% else %}Race strategy, <span class="hl">read from telemetry</span>{% endif %}
+  </h1>
   <p class="hero-lede">
-    รายงานตรวจสอบโมเดล Random Forest ที่ train จาก lap telemetry จริงของ FastF1 —
-    แสดง configuration, feature ที่ใช้ และความคลาดเคลื่อนของเวลาที่จำลองได้เทียบกับเวลาจริง
+    {% if analysis %}
+    วิเคราะห์กลยุทธ์ของ {{ analysis.result.driver }} จาก lap telemetry จริงของ FastF1 — calibrate โมเดลกับเวลาจริง
+    แล้ว grid search หาชุดยาง/รอบพิทที่เร็วกว่า พร้อมจำแนก undercut/overcut และ tyre degradation ต่อ stint
+    {% else %}
+    เครื่องมือวิเคราะห์กลยุทธ์การแข่งขัน F1 ที่ทำงานบนข้อมูล lap telemetry จริงและโมเดล Random Forest
+    {% endif %}
   </p>
+
+  {% if analysis %}
+  <div class="metrics cols-4" style="margin-top: 24px">
+    <div class="metric">
+      <span class="metric-k">Real race time</span>
+      <span class="metric-v accent">{{ analysis.result.real_time }}</span>
+      <span class="metric-u">{{ analysis.result.total_laps }} laps · {{ analysis.result.driver }}</span>
+    </div>
+    <div class="metric">
+      <span class="metric-k">Model accuracy</span>
+      <span class="metric-v accent" data-countup="{{ analysis.result.mae }}">{{ analysis.result.mae }}</span>
+      <span class="metric-u">MAE s / lap</span>
+    </div>
+    <div class="metric">
+      <span class="metric-k">Best strategy found</span>
+      {% if analysis.top_faster %}
+      <span class="metric-v accent">−<span data-countup="{{ "%.1f"|format(analysis.top_faster[0].delta_sec|abs) }}">{{ "%.1f"|format(analysis.top_faster[0].delta_sec|abs) }}</span> s</span>
+      <span class="metric-u">vs real race time</span>
+      {% else %}
+      <span class="metric-v accent">—</span>
+      <span class="metric-u">no faster strategy found</span>
+      {% endif %}
+    </div>
+    <div class="metric">
+      <span class="metric-k">Conditions</span>
+      <span class="metric-v accent">{% if analysis.result.weather %}{{ "WET" if analysis.result.weather.wet else "DRY" }}{% else %}—{% endif %}</span>
+      <span class="metric-u">{% if analysis.result.weather %}{{ analysis.result.weather.track_temp }}°C track{% else %}no weather data{% endif %}</span>
+    </div>
+  </div>
+  {% endif %}
+
   <div class="hero-actions">
     <a class="btn" href="{{ url_for('analysis_page') }}">
-      ดูกลยุทธ์ที่เร็วกว่า
+      เปิด Strategy Analysis
       <svg class="btn-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
     </a>
     <a class="btn ghost" href="{{ url_for('play_strategy_page') }}">
-      ลองเล่น Strategy Lab
+      ไปที่ Strategy Lab
       <svg class="btn-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
     </a>
   </div>
 </section>
 
-<div class="notice notice-warn">
-  <p class="notice-title">ขอบเขตของรายงาน</p>
-  <p>
-    ตัวเลขในหน้านี้คือการ <b>ตรวจสอบความถูกต้องของโมเดล</b> ไม่ใช่การหากลยุทธ์ที่ดีกว่า —
-    ทุก combination ใช้ parameter ชุดเดียวกับที่นักแข่งใช้จริงในการแข่ง แล้วเทียบว่าเวลาที่จำลองได้
-    ห่างจากเวลาจริงเท่าไร ยิ่ง % ต่างน้อย โมเดลยิ่งแม่นยำ
-    การค้นหากลยุทธ์ที่เร็วกว่าอยู่ในหน้า Strategy Analysis
-  </p>
+{% if error %}
+<div class="notice notice-bad" role="alert">
+  <p class="notice-title">โหลดข้อมูลสนามล่าสุดไม่สำเร็จ</p>
+  <p>{{ error }} — ส่วนวิเคราะห์ด้านล่างจะยังไม่แสดงผล ลองเลือกสนาม/นักแข่งเองได้ที่ Strategy Analysis</p>
 </div>
+{% endif %}
 
-<!-- ═══ Headline figures ═══════════════════════════════════ -->
-<section aria-label="สรุปผลรวมของโมเดล">
-  <div class="metrics cols-5">
-    <div class="metric">
-      <span class="metric-k">MAE</span>
-      <span class="metric-v" data-countup="{{ "%.3f"|format(mae_overall) }}">{{ "%.3f"|format(mae_overall) }}</span>
-      <span class="metric-u">s / lap · test set</span>
-    </div>
-    <div class="metric">
-      <span class="metric-k">RMSE</span>
-      <span class="metric-v" data-countup="{{ "%.3f"|format(rmse_overall) }}">{{ "%.3f"|format(rmse_overall) }}</span>
-      <span class="metric-u">s / lap · test set</span>
-    </div>
-    <div class="metric">
-      <span class="metric-k">Avg deviation</span>
-      <span class="metric-v {% if avg_diff_pct|abs < 1 %}ok{% elif avg_diff_pct|abs < 3 %}warn{% else %}bad{% endif %}"
-            data-countup="{{ "%.2f"|format(avg_diff_pct) }}" data-suffix="%" data-prefix="{{ '+' if avg_diff_pct >= 0 else '' }}">
-        {{ "%+.2f"|format(avg_diff_pct) }}%
-      </span>
-      <span class="metric-u">sim vs real · tolerance ±1%</span>
-    </div>
-    <div class="metric">
-      <span class="metric-k">Laps evaluated</span>
-      <span class="metric-v" data-countup="{{ total_laps_trained }}">{{ total_laps_trained }}</span>
-      <span class="metric-u">{{ train_combos|length }} combinations</span>
-    </div>
-    <div class="metric">
-      <span class="metric-k">Train / test</span>
-      <span class="metric-v">80/20</span>
-      <span class="metric-u">random_state 42</span>
-    </div>
-  </div>
-</section>
+{% if analysis %}
 
-<!-- ═══ 01 · Validation results ════════════════════════════ -->
-<section aria-labelledby="val-h">
-  <div class="section-head">
-    <span class="section-no">01</span>
-    <h2 class="section-title" id="val-h">ผลการตรวจสอบ — เวลาจริง vs เวลาจำลอง</h2>
-    <span class="section-note">{{ train_combos|length }} combinations</span>
-  </div>
-  <p class="section-sub">
-    แต่ละจุดคือ 1 นักแข่งใน 1 สนาม จำลองด้วย parameter ชุดเดียวกับที่ใช้จริง
-  </p>
-
-  <div class="panel">
-    <div class="panel-head">
-      <h3 class="panel-title">เวลารวมทั้งการแข่งขัน</h3>
-      <span class="panel-note push">หน่วย: h:mm:ss</span>
-    </div>
-    <div class="panel-body">
-      <div class="chart h-lg"><canvas id="realVsSimLine"></canvas></div>
-      <div class="legend" style="margin-top: 12px">
-        <span><i style="background: #C7CBD1"></i>เวลาจริง (FastF1)</span>
-        <span><i style="background: #E10600"></i>เวลาจำลอง (โมเดล)</span>
-      </div>
-    </div>
-  </div>
-
-  <div class="panel" style="margin-top: 14px">
-    <div class="panel-head">
-      <h3 class="panel-title">% ความต่างระหว่างเวลาจำลองกับเวลาจริง</h3>
-      <span class="panel-note push">0% = ตรงกับเวลาจริง</span>
-    </div>
-    <div class="panel-body">
-      <div class="chart h-sm"><canvas id="diffPctLine"></canvas></div>
-      <div class="legend" style="margin-top: 12px">
-        <span><i style="background: #46B37A"></i>ต่างน้อยกว่า 1%</span>
-        <span><i style="background: #D9A227"></i>1–3%</span>
-        <span><i style="background: #D8453C"></i>มากกว่า 3%</span>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- ═══ 02 · Per-combination results ═══════════════════════ -->
-<section aria-labelledby="combo-h">
+<!-- ═══ 02 · Race Strategy Snapshot ═════════════════════════ -->
+<section aria-labelledby="snap-h">
   <div class="section-head">
     <span class="section-no">02</span>
-    <h2 class="section-title" id="combo-h">ผลรายละเอียดต่อ combination</h2>
-    <span class="section-note">real vs sim per driver</span>
+    <h2 class="section-title" id="snap-h">Race Strategy Snapshot</h2>
+    <span class="section-note">{{ analysis.result.driver }} · {{ analysis.result.race_label }}</span>
+  </div>
+
+  <div class="specbar">
+    <div class="spec"><span class="spec-k">Circuit</span><span class="spec-v">{{ analysis.result.race_label }}</span></div>
+    <div class="spec"><span class="spec-k">Driver</span><span class="spec-v">{{ analysis.result.driver }}</span></div>
+    <div class="spec"><span class="spec-k">Grid</span><span class="spec-v">P{{ analysis.result.grid_position }}</span></div>
+    <div class="spec"><span class="spec-k">Stops (real)</span><span class="spec-v">{{ analysis.result.stints|length - 1 }}</span></div>
+    <div class="spec"><span class="spec-k">Pit loss (est.)</span><span class="spec-v">{{ "%.1f"|format(analysis.result.pit_loss) }}s</span></div>
+    {% if analysis.result.incidents and (analysis.result.incidents.safety_car or analysis.result.incidents.vsc or analysis.result.incidents.red_flag) %}
+    <div class="spec">
+      <span class="spec-k">Incidents</span>
+      <span class="spec-v warn">{% if analysis.result.incidents.red_flag %}Red flag{% elif analysis.result.incidents.safety_car %}Safety Car{% else %}VSC{% endif %}</span>
+    </div>
+    {% endif %}
+  </div>
+
+  {% if analysis.top_faster %}
+  <div class="panel accent" style="margin-top: 14px">
+    <div class="panel-body">
+      <div class="split">
+        <div>
+          <p class="eyebrow muted">กลยุทธ์ที่ดีที่สุดที่หาเจอ</p>
+          <div class="row" style="margin-top: 8px">
+            {{ seq(analysis.top_faster[0].first_compound, analysis.top_faster[0].second_compound, analysis.top_faster[0].third_compound) }}
+            <span class="big">
+              {{ analysis.top_faster[0].first_compound }} › {{ analysis.top_faster[0].second_compound }}{% if analysis.top_faster[0].third_compound %} › {{ analysis.top_faster[0].third_compound }}{% endif %}
+            </span>
+          </div>
+          <div class="row" style="margin-top: 14px">
+            <span class="kv">Pit lap <b>{{ analysis.top_faster[0].pit_lap }}{% if analysis.top_faster[0].second_pit_lap %} / {{ analysis.top_faster[0].second_pit_lap }}{% endif %}</b></span>
+            <span class="kv">Stops <b>{{ analysis.top_faster[0].num_stops }}</b></span>
+          </div>
+        </div>
+        <div>
+          <p class="eyebrow muted">เร็วกว่าเวลาจริง</p>
+          <p class="gain-big ok" style="margin-top: 8px">−<span data-countup="{{ "%.2f"|format(analysis.top_faster[0].delta_sec|abs) }}">{{ "%.2f"|format(analysis.top_faster[0].delta_sec|abs) }}</span><span class="big"> s</span></p>
+          <p class="kv" style="margin-top: 6px">−{{ "%.2f"|format(analysis.top_faster[0].delta_pct|abs) }}% ของเวลารวม</p>
+        </div>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+  <p class="section-sub" style="margin-top: 10px">
+    รายละเอียดกลยุทธ์ทางเลือกทั้งหมดและ parameter ที่ปรับได้ ดูต่อที่
+    <a href="{{ url_for('analysis_page') }}" style="color: var(--brand); text-decoration: underline">Strategy Analysis</a>
+  </p>
+</section>
+
+<!-- ═══ 03 · Interactive lap & pit-stop timeline ═══════════ -->
+<section aria-labelledby="timeline-h">
+  <div class="section-head">
+    <span class="section-no">03</span>
+    <h2 class="section-title" id="timeline-h">Interactive Lap &amp; Pit-stop Timeline</h2>
+    <span class="section-note">{{ analysis.result.total_laps }} laps</span>
   </div>
 
   <div class="panel">
-    <div class="tbl-wrap" tabindex="0" role="region" aria-label="ตารางผลการตรวจสอบต่อ combination">
-      <table class="tbl">
-        <thead>
-          <tr>
-            <th scope="col" style="width: 40px">#</th>
-            <th scope="col">Year</th>
-            <th scope="col">Grand Prix</th>
-            <th scope="col">Driver</th>
-            <th scope="col" class="t-ctr col-opt">Cond.</th>
-            <th scope="col" class="t-ctr col-opt">Laps</th>
-            <th scope="col" class="t-num">Real</th>
-            <th scope="col" class="t-num">Sim</th>
-            <th scope="col" class="t-num">Delta</th>
-            <th scope="col" class="t-num col-opt">MAE</th>
-            <th scope="col" class="t-num">Deviation</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for c in train_combos %}
-          <tr class="race-in" style="animation-delay: {{ (loop.index0 if loop.index0 < 10 else 10) * 0.025 }}s">
-            <td class="dim">{{ loop.index }}</td>
-            <td>{{ c.year }}</td>
-            <td class="wrap">{{ c.gp }}</td>
-            <td style="font-weight: 500">{{ c.driver }}</td>
-            <td class="t-ctr col-opt">
-              {% if c.weather %}<span class="{% if c.weather.wet %}bad{% else %}dim{% endif %}">{{ "WET" if c.weather.wet else "DRY" }}</span>{% else %}<span class="dim">—</span>{% endif %}
-            </td>
-            <td class="t-ctr col-opt dim">{{ c.laps }}</td>
-            <td class="t-num">
-              {{ "%d:%02d:%02d"|format((c.real_total//3600)|int,((c.real_total%3600)//60)|int,(c.real_total%60)|int) }}
-              <span class="sub">{{ "%.1f"|format(c.real_total) }} s</span>
-            </td>
-            <td class="t-num">
-              {{ "%d:%02d:%02d"|format((c.sim_total//3600)|int,((c.sim_total%3600)//60)|int,(c.sim_total%60)|int) }}
-              <span class="sub">{{ "%.1f"|format(c.sim_total) }} s</span>
-            </td>
-            <td class="t-num {% if (c.sim_total-c.real_total)|abs < 20 %}ok{% elif (c.sim_total-c.real_total)|abs < 50 %}warn{% else %}bad{% endif %}">
-              {{ "%+.1f"|format(c.sim_total - c.real_total) }}
-            </td>
-            <td class="t-num col-opt fg2">{{ "%.3f"|format(c.mae) }}</td>
-            <td class="t-num {% if c.diff_pct|abs < 1.0 %}ok{% elif c.diff_pct|abs < 3.0 %}warn{% else %}bad{% endif %}"
-                style="font-weight: 500">
-              {{ "%+.2f"|format(c.diff_pct) }}%
-            </td>
-          </tr>
-          {% endfor %}
-        </tbody>
-        <tfoot>
-          <tr>
-            <td colspan="5">รวมทั้งหมด</td>
-            <td class="t-ctr col-opt">{{ total_laps_trained }}</td>
-            <td colspan="3"></td>
-            <td class="t-num col-opt">{{ "%.3f"|format(mae_overall) }}</td>
-            <td class="t-num">{{ "%+.2f"|format(avg_diff_pct) }}%</td>
-          </tr>
-        </tfoot>
-      </table>
+    <div class="panel-head">
+      <h3 class="panel-title">Lap time · จริง vs โมเดลทำนาย</h3>
+      <span class="panel-note push">{{ analysis.result.driver }}</span>
+    </div>
+    <div class="panel-body">
+      <div class="chart h-md"><canvas id="homeLapChart"></canvas></div>
+      <div class="legend" style="margin-top: 12px">
+        <span><i style="background: #AEB8CC"></i>เวลาจริง (FastF1)</span>
+        <span><i style="background: #E0143C"></i>เวลาที่โมเดลทำนาย</span>
+      </div>
     </div>
     <div class="panel-foot">
-      Delta = เวลาจำลอง − เวลาจริง (วินาที) · Deviation = Delta คิดเป็น % ของเวลาจริง
+      <p class="hint" style="margin: 0 0 8px">Pit-stop timeline จริงของ {{ analysis.result.driver }}:</p>
+      {{ stintbar_multi(analysis.result.total_laps, analysis.result.stints) }}
     </div>
   </div>
 </section>
 
-<!-- ═══ 03 · Cross-driver deviation ════════════════════════ -->
-<section aria-labelledby="cross-h">
+<!-- ═══ 04 · Driver strategy comparison ═════════════════════ -->
+{% if compare %}
+<section aria-labelledby="cmp-h">
   <div class="section-head">
-    <span class="section-no">03</span>
-    <h2 class="section-title" id="cross-h">ความต่างระหว่างนักแข่งใน parameter ชุดเดียวกัน</h2>
-    <span class="section-note">{{ same_param_compare|length }} pairs</span>
+    <span class="section-no">04</span>
+    <h2 class="section-title" id="cmp-h">เปรียบเทียบกลยุทธ์นักแข่งสองคน</h2>
+    <span class="section-note">{{ analysis.result.race_label }} · กลยุทธ์จริง</span>
+  </div>
+
+  <div class="panel">
+    <div class="panel-body">
+      <div class="vs">
+        <div>
+          <p class="eyebrow muted">{{ compare.a.driver }}</p>
+          <div class="row" style="margin-top: 6px; gap: 18px">
+            <span class="rank-big">P{{ compare.a.finish_position or '—' }}</span>
+            <span class="kv">Grid <b>P{{ compare.a.grid_position or '—' }}</b></span>
+          </div>
+          <div style="margin-top: 16px">{{ stintbar_multi(compare.a.total_laps, compare.a.stints) }}</div>
+          <div class="row" style="margin-top: 12px">
+            <span class="kv">Stops <b>{{ compare.a.num_stops }}</b></span>
+            <span class="kv">Total <b>{{ compare.a.total_time_str }}</b></span>
+            <span class="kv">Avg lap <b>{{ "%.2f"|format(compare.a.avg_lap) }}s</b></span>
+          </div>
+        </div>
+
+        <div class="vs-mid" aria-hidden="true">VS</div>
+
+        <div>
+          <p class="eyebrow muted">{{ compare.b.driver }}</p>
+          <div class="row" style="margin-top: 6px; gap: 18px">
+            <span class="rank-big">P{{ compare.b.finish_position or '—' }}</span>
+            <span class="kv">Grid <b>P{{ compare.b.grid_position or '—' }}</b></span>
+          </div>
+          <div style="margin-top: 16px">{{ stintbar_multi(compare.b.total_laps, compare.b.stints) }}</div>
+          <div class="row" style="margin-top: 12px">
+            <span class="kv">Stops <b>{{ compare.b.num_stops }}</b></span>
+            <span class="kv">Total <b>{{ compare.b.total_time_str }}</b></span>
+            <span class="kv">Avg lap <b>{{ "%.2f"|format(compare.b.avg_lap) }}s</b></span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="panel-foot">กลยุทธ์และเวลาเป็นข้อมูลจริงจาก FastF1 — ไม่ใช่การจำลอง</div>
+  </div>
+</section>
+{% endif %}
+
+<!-- ═══ 05 · Tyre degradation & stint analysis ══════════════ -->
+<section aria-labelledby="deg-h">
+  <div class="section-head">
+    <span class="section-no">05</span>
+    <h2 class="section-title" id="deg-h">Tyre Degradation &amp; Stint Analysis</h2>
+    <span class="section-note">{{ analysis.result.driver }} · {{ analysis.result.stints|length }} stints</span>
   </div>
   <p class="section-sub">
-    ใช้ feature set เดียวกันในสนามเดียวกัน เทียบว่า deviation ของแต่ละนักแข่งห่างกันเท่าไร
+    Degradation rate หาจาก linear fit ของเวลาต่อรอบเทียบอายุยาง (ตัด out/in-lap ออก) — ยิ่งค่าเป็นบวกมาก ยางยิ่งเสื่อมเร็ว
   </p>
 
   <div class="panel">
-    <div class="tbl-wrap" tabindex="0" role="region" aria-label="ตารางเปรียบเทียบ deviation ระหว่างนักแข่ง">
+    <div class="tbl-wrap" tabindex="0" role="region" aria-label="ตาราง tyre degradation ต่อ stint">
       <table class="tbl">
         <thead>
           <tr>
-            <th scope="col">Grand Prix</th>
-            <th scope="col">Driver A</th>
-            <th scope="col" class="t-num col-opt">Real A</th>
-            <th scope="col" class="t-num col-opt">Sim A</th>
-            <th scope="col" class="t-num">Dev A</th>
-            <th scope="col">Driver B</th>
-            <th scope="col" class="t-num col-opt">Real B</th>
-            <th scope="col" class="t-num col-opt">Sim B</th>
-            <th scope="col" class="t-num">Dev B</th>
-            <th scope="col" class="t-num">Spread</th>
+            <th scope="col" style="width: 44px">Stint</th>
+            <th scope="col">Compound</th>
+            <th scope="col" class="t-ctr">Laps</th>
+            <th scope="col" class="t-num">Avg pace</th>
+            <th scope="col" class="t-num">Degradation</th>
           </tr>
         </thead>
         <tbody>
-          {% for row in same_param_compare %}
+          {% for s in analysis.result.stints %}
           <tr>
-            <td class="wrap">{{ row.gp }} {{ row.year }}</td>
-            <td style="font-weight: 500">{{ row.driver_a }}</td>
-            <td class="t-num col-opt fg2">{{ "%.1f"|format(row.real_a) }}</td>
-            <td class="t-num col-opt fg2">{{ "%.1f"|format(row.sim_a) }}</td>
-            <td class="t-num {% if row.diff_a|abs < 1 %}ok{% elif row.diff_a|abs < 3 %}warn{% else %}bad{% endif %}">
-              {{ "%+.2f"|format(row.diff_a) }}%
+            <td class="rk">{{ s.stint }}</td>
+            <td>{{ cmp(s.compound) }} <span class="seq-text">{{ s.compound }}</span></td>
+            <td class="t-ctr dim">L{{ s.start_lap }}–{{ s.end_lap }} ({{ s.laps }})</td>
+            <td class="t-num">{{ "%.2f"|format(s.avg_pace) }}s</td>
+            <td class="t-num {% if s.deg_rate is none %}dim{% elif s.deg_rate|abs < 0.03 %}ok{% elif s.deg_rate|abs < 0.08 %}warn{% else %}bad{% endif %}">
+              {% if s.deg_rate is none %}n/a{% else %}{{ "%+.3f"|format(s.deg_rate) }} s/lap{% endif %}
             </td>
-            <td style="font-weight: 500">{{ row.driver_b }}</td>
-            <td class="t-num col-opt fg2">{{ "%.1f"|format(row.real_b) }}</td>
-            <td class="t-num col-opt fg2">{{ "%.1f"|format(row.sim_b) }}</td>
-            <td class="t-num {% if row.diff_b|abs < 1 %}ok{% elif row.diff_b|abs < 3 %}warn{% else %}bad{% endif %}">
-              {{ "%+.2f"|format(row.diff_b) }}%
-            </td>
-            <td class="t-num" style="font-weight: 500">{{ "%.2f"|format((row.diff_a - row.diff_b)|abs) }}%</td>
           </tr>
           {% endfor %}
         </tbody>
       </table>
     </div>
-    <div class="panel-foot">Spread = ผลต่างของ deviation ระหว่างสองนักแข่งในสนามเดียวกัน</div>
+    <div class="panel-foot">n/a = stint สั้นเกินไปที่จะประมาณ degradation ได้อย่างน่าเชื่อถือ</div>
   </div>
 </section>
+
+<!-- ═══ 06 · Undercut / Overcut analysis ════════════════════ -->
+{% if analysis.pit_tactics %}
+<section aria-labelledby="tac-h">
+  <div class="section-head">
+    <span class="section-no">06</span>
+    <h2 class="section-title" id="tac-h">Undercut / Overcut Analysis</h2>
+    <span class="section-note">baseline pit lap {{ analysis.baseline.pit_lap }}</span>
+  </div>
+
+  <div class="panel">
+    <div class="tbl-wrap" tabindex="0" role="region" aria-label="ตาราง undercut overcut">
+      <table class="tbl">
+        <thead>
+          <tr>
+            <th scope="col">Tactic</th>
+            <th scope="col" class="t-ctr">Pit lap</th>
+            <th scope="col" class="t-ctr col-opt">vs baseline</th>
+            <th scope="col">Compound</th>
+            <th scope="col" class="t-num">Time gained</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for t in analysis.pit_tactics[:4] %}
+          <tr>
+            <td><span class="pill {% if t.tactic == 'Undercut' %}pill-undercut{% elif t.tactic == 'Overcut' %}pill-overcut{% else %}pill-neutral{% endif %}">{{ t.tactic }}</span></td>
+            <td class="t-ctr">{{ t.pit_lap }}{% if t.second_pit_lap %} / {{ t.second_pit_lap }}{% endif %}</td>
+            <td class="t-ctr col-opt dim">{{ "%+d"|format(t.pit_diff) }} laps</td>
+            <td>{{ seq(t.first_compound, t.second_compound, t.third_compound) }}</td>
+            <td class="t-num ok">−{{ "%.2f"|format(t.delta_sec|abs) }} s</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    <div class="panel-foot">ตารางเต็มและคำอธิบาย tactic แต่ละแบบ ดูที่ Strategy Analysis</div>
+  </div>
+</section>
+{% endif %}
+
+<!-- ═══ 07 · Strategy Lab ═══════════════════════════════════ -->
+<section aria-labelledby="lab-h">
+  <div class="section-head">
+    <span class="section-no">07</span>
+    <h2 class="section-title" id="lab-h">Strategy Lab</h2>
+    <span class="section-note">จำลองกลยุทธ์ของคุณเอง</span>
+  </div>
+
+  <div class="panel accent">
+    <div class="panel-body">
+      <div class="split">
+        <div>
+          <p class="eyebrow muted">ทดลองด้วยตัวเอง</p>
+          <p style="margin-top: 8px; color: var(--fg-2); max-width: 52ch">
+            กำหนดยางเริ่มต้น ยางหลังพิท และรอบที่เข้าพิทเอง (รองรับสูงสุด 2 stops) แล้วให้โมเดลจำลอง
+            เวลารวมของคุณเทียบกับนักแข่งทั้งกริดในสนามเดียวกัน พร้อมอันดับและ win probability
+          </p>
+        </div>
+        <div style="display: flex; align-items: center; justify-content: flex-start">
+          <a class="btn block" href="{{ url_for('play_strategy_page') }}">
+            เปิด Strategy Lab
+            <svg class="btn-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ 08 · Circuit strategy profile ═══════════════════════ -->
+{% if circuit_profile %}
+<section aria-labelledby="circuit-h">
+  <div class="section-head">
+    <span class="section-no">08</span>
+    <h2 class="section-title" id="circuit-h">Circuit Strategy Profile</h2>
+    <span class="section-note">{{ circuit_profile.race_label }}</span>
+  </div>
+
+  <div class="metrics cols-4">
+    <div class="metric">
+      <span class="metric-k">Distance</span>
+      <span class="metric-v">{{ circuit_profile.total_laps }}</span>
+      <span class="metric-u">laps</span>
+    </div>
+    <div class="metric">
+      <span class="metric-k">Pit loss (est.)</span>
+      <span class="metric-v">{{ "%.1f"|format(circuit_profile.pit_loss) }}</span>
+      <span class="metric-u">seconds</span>
+    </div>
+    <div class="metric">
+      <span class="metric-k">Degradation profile</span>
+      <span class="metric-v">
+        <span class="pill {% if circuit_profile.deg_level == 'Low' %}pill-undercut{% elif circuit_profile.deg_level == 'High' %}pill-overcut{% else %}pill-neutral{% endif %}">{{ circuit_profile.deg_level }}</span>
+      </span>
+      <span class="metric-u">{% if circuit_profile.avg_deg is not none %}avg {{ "%+.3f"|format(circuit_profile.avg_deg) }} s/lap{% else %}insufficient data{% endif %}</span>
+    </div>
+    <div class="metric">
+      <span class="metric-k">Fast pit window</span>
+      <span class="metric-v">{% if circuit_profile.pit_window %}L{{ circuit_profile.pit_window.min }}–{{ circuit_profile.pit_window.max }}{% else %}—{% endif %}</span>
+      <span class="metric-u">from grid search</span>
+    </div>
+  </div>
+
+  {% if circuit_profile.weather or circuit_profile.incidents %}
+  <div class="specbar" style="margin-top: 14px">
+    {% if circuit_profile.weather %}
+    <div class="spec"><span class="spec-k">Conditions</span><span class="spec-v {% if circuit_profile.weather.wet %}bad{% else %}ok{% endif %}">{{ "WET" if circuit_profile.weather.wet else "DRY" }}</span></div>
+    <div class="spec"><span class="spec-k">Air temp</span><span class="spec-v">{{ circuit_profile.weather.air_temp }}°C</span></div>
+    <div class="spec"><span class="spec-k">Track temp</span><span class="spec-v">{{ circuit_profile.weather.track_temp }}°C</span></div>
+    <div class="spec"><span class="spec-k">Humidity</span><span class="spec-v">{{ circuit_profile.weather.humidity }}%</span></div>
+    {% endif %}
+    {% if circuit_profile.incidents %}
+    <div class="spec">
+      <span class="spec-k">Race incidents</span>
+      <span class="spec-v {% if circuit_profile.incidents.safety_car or circuit_profile.incidents.red_flag %}warn{% else %}dim{% endif %}">
+        {% if circuit_profile.incidents.red_flag %}Red flag{% elif circuit_profile.incidents.safety_car %}Safety Car{% elif circuit_profile.incidents.vsc %}VSC{% else %}Green{% endif %}
+      </span>
+    </div>
+    {% endif %}
+  </div>
+  {% endif %}
+</section>
+{% endif %}
+
+<!-- ═══ 09 · Strategic insights ═════════════════════════════ -->
+{% if analysis.explanations %}
+<section aria-labelledby="insight-h">
+  <div class="section-head">
+    <span class="section-no">09</span>
+    <h2 class="section-title" id="insight-h">Strategic Insights</h2>
+    <span class="section-note">ทำไมกลยุทธ์นี้ถึงเร็วกว่า</span>
+  </div>
+
+  <div class="defs">
+    {% for e in analysis.explanations %}
+    <div class="def">
+      <div class="def-head">
+        <span class="def-name">{{ e.param }}</span>
+        <span class="def-impact {% if e.impact == 'high' %}high{% endif %}">{{ e.impact }} impact</span>
+      </div>
+      <p class="def-move"><span class="from">{{ e.from }}</span> <span class="seq-arrow">→</span> <span class="to">{{ e.to }}</span></p>
+      <p class="def-reason">{{ e.reason }}</p>
+    </div>
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
+
+{% endif %}{# end {% if analysis %} #}
 
 <div class="divider-flag" role="presentation"><span class="chk" aria-hidden="true"></span></div>
 
-<!-- ═══ 04 · Model configuration ═══════════════════════════ -->
-<section aria-labelledby="cfg-h">
+<!-- ═══ 10 · Strategy glossary ══════════════════════════════ -->
+<section aria-labelledby="gloss-h">
   <div class="section-head">
-    <span class="section-no">04</span>
-    <h2 class="section-title" id="cfg-h">Model configuration</h2>
-    <span class="section-note">RandomForestRegressor</span>
+    <span class="section-no">10</span>
+    <h2 class="section-title" id="gloss-h">Strategy Glossary</h2>
+    <span class="section-note">ศัพท์ที่ใช้บ่อยในหน้านี้</span>
   </div>
 
-  <div class="panel">
-    <div class="tbl-wrap" tabindex="0" role="region" aria-label="ตาราง hyperparameters">
-      <table class="tbl">
-        <thead>
-          <tr>
-            <th scope="col">Hyperparameter</th>
-            <th scope="col" class="t-num">Value</th>
-            <th scope="col" class="wrap">คำอธิบาย</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for p in hyperparams %}
-          <tr>
-            <td>{{ p.name }}</td>
-            <td class="t-num" style="font-weight: 500">{{ p.value }}</td>
-            <td class="wrap fg2">{{ p.desc }}</td>
-          </tr>
-          {% endfor %}
-        </tbody>
-      </table>
+  <dl class="glossary">
+    <div class="glossary-term">
+      <dt>Undercut</dt>
+      <dd>เข้าพิทก่อนคู่แข่ง เพื่อใช้ยางใหม่ที่ grip สูงกว่าแซงในช่วงที่คู่แข่งยังไม่เข้าพิท</dd>
     </div>
-  </div>
-</section>
-
-<!-- ═══ 05 · Input features ════════════════════════════════ -->
-<section aria-labelledby="feat-h">
-  <div class="section-head">
-    <span class="section-no">05</span>
-    <h2 class="section-title" id="feat-h">Input features</h2>
-    <span class="section-note">{{ features|length }} features</span>
-  </div>
-  <p class="section-sub">
-    Compound และ TrackStatus แปลงเป็น one-hot ก่อน train · Impact คือน้ำหนักที่ feature นั้นมีต่อการทำนาย lap time
-  </p>
-
-  <div class="panel">
-    <div class="tbl-wrap" tabindex="0" role="region" aria-label="ตาราง input features">
-      <table class="tbl">
-        <thead>
-          <tr>
-            <th scope="col">Feature</th>
-            <th scope="col" class="col-opt">Type</th>
-            <th scope="col" class="wrap">คำอธิบาย</th>
-            <th scope="col" class="t-ctr">Impact</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for f in features %}
-          <tr>
-            <td style="font-weight: 500">{{ f.name }}</td>
-            <td class="col-opt dim" style="text-transform: uppercase; letter-spacing: 0.06em; font-size: 10.5px">{{ f.type }}</td>
-            <td class="wrap fg2">{{ f.desc }}</td>
-            <td class="t-ctr">
-              <span class="impact" role="img" aria-label="impact {{ f.impact }} จาก 5">
-                {% for i in range(5) %}<i class="{% if i < f.impact %}on{% endif %}"></i>{% endfor %}
-              </span>
-            </td>
-          </tr>
-          {% endfor %}
-        </tbody>
-      </table>
+    <div class="glossary-term">
+      <dt>Overcut</dt>
+      <dd>เข้าพิทช้ากว่าคู่แข่ง ใช้ยางเก่า push ต่อ แล้วออกมาเจอแทร็กโล่งพร้อมยางใหม่</dd>
     </div>
-  </div>
+    <div class="glossary-term">
+      <dt>Stint</dt>
+      <dd>ช่วงที่วิ่งต่อเนื่องด้วยยางชุดเดียวกัน ก่อนเข้าพิทเปลี่ยนยางครั้งถัดไป</dd>
+    </div>
+    <div class="glossary-term">
+      <dt>Tyre Degradation</dt>
+      <dd>อัตราที่เวลาต่อรอบช้าลงเมื่อยางเก่าขึ้น วัดเป็นวินาทีต่อรอบต่ออายุยาง 1 รอบ</dd>
+    </div>
+    <div class="glossary-term">
+      <dt>Pit Window</dt>
+      <dd>ช่วงรอบที่การเข้าพิทให้ผลลัพธ์เวลารวมดีที่สุดตามกลยุทธ์ที่ grid search หาได้</dd>
+    </div>
+    <div class="glossary-term">
+      <dt>Pace Offset</dt>
+      <dd>ค่าคงที่ต่อรอบที่ใช้ calibrate โมเดลให้เวลาที่จำลองได้ตรงกับเวลาจริงของนักแข่งคนนั้น</dd>
+    </div>
+    <div class="glossary-term">
+      <dt>MAE / RMSE</dt>
+      <dd>ค่าความคลาดเคลื่อนเฉลี่ยของโมเดลเทียบเวลาจริง (วินาทีต่อรอบ) ยิ่งน้อยยิ่งแม่นยำ</dd>
+    </div>
+    <div class="glossary-term">
+      <dt>Safety Car / VSC</dt>
+      <dd>ช่วงที่ความเร็วถูกจำกัดทั้งสนามหลังเกิดเหตุการณ์ มักเปลี่ยนความคุ้มค่าของการเข้าพิท</dd>
+    </div>
+    <div class="glossary-term">
+      <dt>Grid Position</dt>
+      <dd>ตำแหน่งออกสตาร์ทจริงของนักแข่ง ใช้เป็นปัจจัยหนึ่งในการจำลองการแข่งขัน</dd>
+    </div>
+  </dl>
 </section>
 
 {% endblock %}
 
 {% block scripts %}
+{% if analysis %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-document.addEventListener('DOMContentLoaded', function () {
-  const combos = JSON.parse('{{ chart_combos | tojson | safe }}');
-  const labels = combos.map(c => c.driver + " " + c.gp.slice(0, 3).toUpperCase() + "'" + String(c.year).slice(-2));
-  const reals  = combos.map(c => c.real_total);
-  const sims   = combos.map(c => c.sim_total);
-  const diffs  = combos.map(c => c.diff_pct);
+  const lapLabels  = JSON.parse('{{ analysis.lap_labels  | tojson | safe }}');
+  const actualLaps = JSON.parse('{{ analysis.actual_laps | tojson | safe }}');
+  const predLaps   = JSON.parse('{{ analysis.pred_laps   | tojson | safe }}');
 
-  const INK   = "#E9EAED";
-  const MUTED = "#71757F";
-  const LINE  = "#3A3D45";
+  const INK   = "#E9EDF4";
+  const MUTED = "#67718A";
   const GRID  = "rgba(255,255,255,0.05)";
   const MONO  = "'IBM Plex Mono', ui-monospace, monospace";
-  const STEEL = "#C7CBD1";
-  const RED   = "#E10600";
 
   Chart.defaults.font.family = MONO;
   Chart.defaults.font.size   = 10;
   Chart.defaults.color       = MUTED;
 
-  const clock = v => {
-    const h = Math.floor(v / 3600), m = Math.floor((v % 3600) / 60), s = Math.floor(v % 60);
-    return `${h}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
-  };
-  const tolColor = d => Math.abs(d) < 1 ? "#46B37A" : Math.abs(d) < 3 ? "#D9A227" : "#D8453C";
-
-  const tooltipStyle = {
-    backgroundColor: "#0D0E10",
-    borderColor: LINE,
-    borderWidth: 1,
-    titleColor: INK,
-    bodyColor: INK,
-    cornerRadius: 3,
-    padding: 10,
-    displayColors: false,
-    titleFont: { family: MONO, size: 10 },
-    bodyFont: { family: MONO, size: 11 },
-  };
-
-  // ── เวลาจริง vs เวลาจำลอง ─────────────────────────────
-  new Chart(document.getElementById("realVsSimLine"), {
+  new Chart(document.getElementById("homeLapChart").getContext("2d"), {
     type: "line",
     data: {
-      labels,
+      labels: lapLabels,
       datasets: [
         {
-          label: "เวลาจริง (s)",
-          data: reals,
-          borderColor: STEEL,
-          backgroundColor: STEEL,
-          borderWidth: 1.5, tension: 0, fill: false,
-          pointRadius: 3, pointHoverRadius: 5, pointStyle: "rect",
+          label: "จริง",
+          data: actualLaps,
+          borderColor: "#AEB8CC",
+          backgroundColor: "#AEB8CC",
+          borderWidth: 1.5, tension: 0, pointRadius: 0, pointHitRadius: 8,
         },
         {
-          label: "เวลาจำลอง (s)",
-          data: sims,
-          borderColor: RED,
-          backgroundColor: RED,
-          borderWidth: 1.5, tension: 0, fill: false, borderDash: [4, 3],
-          pointRadius: 3, pointHoverRadius: 5, pointStyle: "rect",
+          label: "ทำนาย (หลัง calibrate)",
+          data: predLaps,
+          borderColor: "#E0143C",
+          backgroundColor: "#E0143C",
+          borderWidth: 1.5, tension: 0, pointRadius: 0, pointHitRadius: 8,
         },
       ],
     },
@@ -384,70 +522,38 @@ document.addEventListener('DOMContentLoaded', function () {
       plugins: {
         legend: { display: false },
         tooltip: {
-          ...tooltipStyle,
-          callbacks: { label: ctx => `${ctx.dataset.label}: ${clock(ctx.parsed.y)} (${ctx.parsed.y.toFixed(1)} s)` },
+          backgroundColor: "#070911",
+          borderColor: "#323C51",
+          borderWidth: 1,
+          titleColor: INK,
+          bodyColor: INK,
+          cornerRadius: 3,
+          padding: 10,
+          displayColors: false,
+          titleFont: { family: MONO, size: 10 },
+          bodyFont: { family: MONO, size: 11 },
+          callbacks: {
+            title: items => "LAP " + items[0].label,
+            label: ctx => `${ctx.dataset.label}: ${ctx.parsed.y.toFixed(3)} s`,
+          },
         },
       },
       scales: {
         x: {
-          ticks: { color: MUTED, maxRotation: 40, minRotation: 40 },
+          title: { display: true, text: "LAP", color: MUTED, font: { size: 10 } },
+          ticks: { color: MUTED, maxRotation: 0, autoSkipPadding: 16 },
           grid: { color: GRID, drawTicks: false },
-          border: { color: LINE },
+          border: { color: "#323C51" },
         },
         y: {
-          ticks: { color: MUTED, callback: v => clock(v) },
+          title: { display: true, text: "LAP TIME (S)", color: MUTED, font: { size: 10 } },
+          ticks: { color: MUTED },
           grid: { color: GRID, drawTicks: false },
-          border: { color: LINE },
-          title: { display: true, text: "TOTAL RACE TIME", color: MUTED, font: { size: 10 } },
+          border: { color: "#323C51" },
         },
       },
     },
   });
-
-  // ── % deviation ───────────────────────────────────────
-  new Chart(document.getElementById("diffPctLine"), {
-    type: "line",
-    data: {
-      labels,
-      datasets: [{
-        label: "deviation",
-        data: diffs,
-        borderColor: MUTED,
-        borderWidth: 1,
-        tension: 0,
-        fill: false,
-        pointRadius: 4,
-        pointHoverRadius: 6,
-        pointStyle: "rect",
-        pointBackgroundColor: diffs.map(tolColor),
-        pointBorderColor: diffs.map(tolColor),
-      }],
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      interaction: { mode: "index", intersect: false },
-      plugins: {
-        legend: { display: false },
-        tooltip: {
-          ...tooltipStyle,
-          callbacks: { label: ctx => `deviation: ${ctx.parsed.y > 0 ? "+" : ""}${ctx.parsed.y.toFixed(2)}%` },
-        },
-      },
-      scales: {
-        x: {
-          ticks: { color: MUTED, maxRotation: 40, minRotation: 40 },
-          grid: { color: GRID, drawTicks: false },
-          border: { color: LINE },
-        },
-        y: {
-          ticks: { color: MUTED, callback: v => `${v > 0 ? "+" : ""}${v.toFixed(1)}%` },
-          grid: { color: GRID, drawTicks: false },
-          border: { color: LINE },
-        },
-      },
-    },
-  });
-});
 </script>
+{% endif %}
 {% endblock %}

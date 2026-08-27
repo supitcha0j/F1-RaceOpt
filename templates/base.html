@@ -15,27 +15,36 @@
          RaceOpt — motorsport engineering design tokens
       ───────────────────────────────────────────── */
       :root {
-        --bg:        #121316;
-        --bg-sunk:   #0D0E10;
-        --surface:   #191A1E;
-        --surface-2: #1F2126;
-        --line:      #2A2C32;
-        --line-2:    #3A3D45;
-        --fg:        #E9EAED;
-        --fg-2:      #A2A6B0;
-        --fg-3:      #71757F;
+        /* Deep navy-charcoal neutrals — cool undertone, deliberately not F1's
+           near-black/white broadcast palette */
+        --bg:        #0B0E13;
+        --bg-sunk:   #070911;
+        --surface:   #121722;
+        --surface-2: #171D2A;
+        --line:      #232B3B;
+        --line-2:    #323C51;
+        --fg:        #E9EDF4;
+        --fg-2:      #99A3B8;
+        --fg-3:      #67718A;
 
-        --red:       #E10600;
-        --red-hi:    #FF2A17;
-        --red-wash:  rgba(225, 6, 0, 0.10);
+        /* Crimson red — primary brand/telemetry accent. Deliberately a cooler,
+           more magenta-leaning red than F1's official red (#E10600) so it reads
+           as "motorsport red" rather than a brand color match. */
+        --brand:      #E0143C;
+        --brand-hi:   #FF3A5C;
+        --brand-wash: rgba(224, 20, 60, 0.10);
 
-        --gain:      #46B37A;
-        --warn:      #D9A227;
-        --bad:       #D8453C;
+        /* Amber + acid lime — reserved for important data readouts, never structural chrome */
+        --amber:     #FFB020;
+        --lime:      #B4FF39;
 
-        --soft:      #E8433A;
-        --medium:    #D9B23A;
-        --hard:      #DDE0E5;
+        --gain:      #B4FF39;
+        --warn:      #FFB020;
+        --bad:       #FF5C72;
+
+        --soft:      #FF5C72;
+        --medium:    #FFC94D;
+        --hard:      #E4E8F0;
 
         --sans:    "IBM Plex Sans Thai", system-ui, -apple-system, "Segoe UI", sans-serif;
         --mono:    "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
@@ -78,7 +87,7 @@
       /* ── Focus / motion baseline ───────────────── */
       :focus { outline: none; }
       :focus-visible {
-        outline: 2px solid var(--red-hi);
+        outline: 2px solid var(--brand-hi);
         outline-offset: 2px;
         border-radius: 2px;
       }
@@ -92,7 +101,7 @@
         top: 0;
         z-index: 100;
         padding: 10px 16px;
-        background: var(--red);
+        background: var(--brand);
         color: #fff;
         font: 600 12px/1 var(--mono);
         letter-spacing: 0.1em;
@@ -102,13 +111,13 @@
       .skip:focus { left: 8px; top: 8px; }
 
       /* ── Chrome: top line + nav ────────────────── */
-      .topline { height: 2px; background: var(--red); }
+      .topline { height: 2px; background: var(--brand); }
 
       .nav {
         position: sticky;
         top: 0;
         z-index: 30;
-        background: rgba(18, 19, 22, 0.94);
+        background: rgba(11, 14, 19, 0.94);
         backdrop-filter: blur(8px);
         border-bottom: 1px solid var(--line);
       }
@@ -137,7 +146,7 @@
         width: 4px;
         height: 13px;
         margin-right: 8px;
-        background: var(--red);
+        background: var(--brand);
         vertical-align: -1px;
       }
       .brand-sub {
@@ -168,7 +177,7 @@
         transition: color 0.12s ease, border-color 0.12s ease;
       }
       .tab:hover { color: var(--fg); }
-      .tab[aria-current="page"] { color: var(--fg); border-bottom-color: var(--red); }
+      .tab[aria-current="page"] { color: var(--fg); border-bottom-color: var(--brand); }
 
       @media (min-width: 720px) {
         .nav-inner { flex-direction: row; align-items: center; justify-content: space-between; gap: 24px; }
@@ -190,7 +199,7 @@
         font: 500 11px/1.4 var(--mono);
         letter-spacing: 0.18em;
         text-transform: uppercase;
-        color: var(--red);
+        color: var(--brand);
       }
       .eyebrow.muted { color: var(--fg-3); }
       .page-title {
@@ -240,14 +249,14 @@
         gap: 7px;
         font: 500 11px/1.6 var(--mono);
         letter-spacing: 0.12em;
-        color: var(--red);
+        color: var(--brand);
       }
       /* racing-line tick: a small diagonal dash ahead of every section number */
       .section-no::before {
         content: "";
         width: 10px;
         height: 2px;
-        background: var(--red);
+        background: var(--brand);
         transform: skewX(-25deg);
         flex: 0 0 auto;
       }
@@ -262,7 +271,7 @@
         border-radius: var(--r);
       }
       .panel.accent {
-        border-left: 2px solid var(--red);
+        border-left: 2px solid var(--brand);
         clip-path: polygon(0 0, calc(100% - var(--cut)) 0, 100% var(--cut), 100% 100%, 0 100%);
       }
       .panel-head {
@@ -313,6 +322,7 @@
         letter-spacing: -0.01em;
         overflow-wrap: anywhere;
       }
+      .metric-v.accent { color: var(--amber); }
       .metric-u { display: block; margin-top: 4px; font: 400 11px/1.4 var(--mono); color: var(--fg-3); }
       @media (min-width: 640px) {
         .metrics { grid-template-columns: repeat(4, minmax(0, 1fr)); }
@@ -328,7 +338,7 @@
       .bad  { color: var(--bad); }
       .dim  { color: var(--fg-3); }
       .fg2  { color: var(--fg-2); }
-      .lead { color: var(--red); }
+      .lead { color: var(--brand); }
 
       /* ── Tables: timing-screen treatment ──────── */
       .tbl-wrap { overflow-x: auto; }
@@ -367,8 +377,8 @@
       .t-ctr { text-align: center; }
       td.wrap, th.wrap { white-space: normal; }
       .sub { display: block; font-size: 10.5px; color: var(--fg-3); }
-      table.tbl tbody tr.marked td { background: var(--red-wash); }
-      table.tbl tbody tr.marked td:first-child { box-shadow: inset 2px 0 0 var(--red); }
+      table.tbl tbody tr.marked td { background: var(--brand-wash); }
+      table.tbl tbody tr.marked td:first-child { box-shadow: inset 2px 0 0 var(--brand); }
       .rk { font-weight: 600; }
 
       /* Low-priority columns fold away on small screens */
@@ -394,6 +404,22 @@
       .seq { display: inline-flex; align-items: center; gap: 5px; }
       .seq-arrow { color: var(--fg-3); font: 400 11px/1 var(--mono); }
       .seq-text { font: 500 12px/1 var(--mono); letter-spacing: 0.04em; color: var(--fg-2); }
+
+      /* ── Tactic pill (undercut / overcut) ──────── */
+      .pill {
+        display: inline-flex;
+        align-items: center;
+        padding: 3px 9px;
+        border-radius: 999px;
+        border: 1px solid currentColor;
+        font: 600 10px/1.6 var(--mono);
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        white-space: nowrap;
+      }
+      .pill-undercut { color: var(--brand); background: var(--brand-wash); }
+      .pill-overcut  { color: var(--amber); background: rgba(255, 176, 32, 0.10); }
+      .pill-neutral  { color: var(--fg-3); background: var(--surface-2); }
 
       /* ── Stint bar: the strategy read at a glance ── */
       .stint-track {
@@ -431,7 +457,7 @@
         top: -5px;
         width: 1px;
         height: 5px;
-        background: var(--red);
+        background: var(--brand);
       }
 
       /* ── Meter (probability / gap) ─────────────── */
@@ -442,7 +468,7 @@
         border-radius: 2px;
         overflow: hidden;
       }
-      .meter-fill { height: 100%; background: var(--red); }
+      .meter-fill { height: 100%; background: var(--brand); }
       .meter-fill.neutral { background: var(--line-2); }
 
       /* ── Impact scale (5-step) ─────────────────── */
@@ -491,7 +517,7 @@
         padding-right: 32px;
       }
       select:hover, input[type="number"]:hover { border-color: var(--fg-3); }
-      select:focus-visible, input[type="number"]:focus-visible { border-color: var(--red-hi); }
+      select:focus-visible, input[type="number"]:focus-visible { border-color: var(--brand-hi); }
 
       /* .btn's angled backdrop lives on ::before (not on .btn itself) so the
          focus-visible outline below stays a plain, fully-visible rectangle —
@@ -519,13 +545,13 @@
         position: absolute;
         inset: 0;
         z-index: -1;
-        background: var(--red);
-        border: 1px solid var(--red);
+        background: var(--brand);
+        border: 1px solid var(--brand);
         border-radius: var(--r);
         clip-path: polygon(0 0, calc(100% - 10px) 0, 100% 100%, 0 100%);
         transition: background 0.12s ease, border-color 0.12s ease;
       }
-      .btn:hover::before { background: var(--red-hi); border-color: var(--red-hi); }
+      .btn:hover::before { background: var(--brand-hi); border-color: var(--brand-hi); }
       .btn.block { width: 100%; }
       .btn-arrow { display: inline-flex; transition: transform 0.15s var(--ease-out); }
       .btn:hover .btn-arrow { transform: translateX(3px); }
@@ -582,7 +608,7 @@
         color: var(--fg-3);
         white-space: nowrap;
       }
-      .def-impact.high { color: var(--red); }
+      .def-impact.high { color: var(--brand); }
       .def-move { margin-top: 8px; font: 500 12px/1.5 var(--mono); }
       .def-move .from { color: var(--fg-3); }
       .def-move .to { color: var(--fg); }
@@ -669,14 +695,14 @@
       }
       .hero-headline .hl {
         position: relative;
-        color: var(--red);
+        color: var(--brand);
         white-space: nowrap;
       }
       .hero-bar {
         display: inline-block;
         width: 46px;
         height: 4px;
-        background: var(--red);
+        background: var(--brand);
         transform: skewX(-25deg);
         margin-bottom: 14px;
       }
@@ -699,6 +725,45 @@
         border-color: var(--fg-3);
       }
 
+      /* ── Head-to-head compare (two drivers / two strategies) ── */
+      .vs {
+        display: grid;
+        gap: 16px;
+        grid-template-columns: 1fr;
+        align-items: start;
+      }
+      @media (min-width: 760px) {
+        .vs { grid-template-columns: 1fr auto 1fr; gap: 20px; }
+      }
+      .vs-mid {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font: 700 12px/1 var(--display);
+        letter-spacing: 0.1em;
+        color: var(--fg-3);
+        padding: 4px 0;
+      }
+      @media (min-width: 760px) {
+        .vs-mid { writing-mode: vertical-rl; padding: 0 4px; }
+      }
+
+      /* ── Glossary ──────────────────────────────── */
+      .glossary {
+        display: grid;
+        gap: 1px;
+        grid-template-columns: 1fr;
+        background: var(--line);
+        border: 1px solid var(--line);
+        border-radius: var(--r);
+        overflow: hidden;
+      }
+      @media (min-width: 640px) { .glossary { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+      @media (min-width: 980px) { .glossary { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+      .glossary-term { background: var(--surface); padding: 14px 16px; }
+      .glossary-term dt { font: 600 12.5px/1.4 var(--display); letter-spacing: 0.01em; color: var(--fg); }
+      .glossary-term dd { margin: 6px 0 0; font-size: 12px; line-height: 1.6; color: var(--fg-2); }
+
       .split { display: grid; gap: 20px; grid-template-columns: 1fr; }
       @media (min-width: 760px) {
         .split { grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr); gap: 32px; }
@@ -706,7 +771,7 @@
       }
 
       /* ── Footer ────────────────────────────────── */
-      .foot { border-top: 1px solid var(--line); }
+      .foot { border-top: 1px solid var(--line); background: var(--bg-sunk); }
       .foot-inner {
         max-width: 1180px;
         margin: 0 auto;
@@ -717,6 +782,17 @@
         font: 400 11px/1.6 var(--mono);
         letter-spacing: 0.06em;
         text-transform: uppercase;
+        color: var(--fg-3);
+      }
+      .foot-disclaimer {
+        padding-top: 0;
+        text-transform: none;
+        letter-spacing: normal;
+      }
+      .foot-disclaimer p {
+        max-width: 84ch;
+        font-size: 11px;
+        line-height: 1.7;
         color: var(--fg-3);
       }
 
@@ -743,11 +819,13 @@
         </a>
         <div class="tabs">
           <a class="tab" href="{{ url_for('index') }}"
-             {% if request.endpoint == 'index' %}aria-current="page"{% endif %}>Model Report</a>
+             {% if request.endpoint == 'index' %}aria-current="page"{% endif %}>Home</a>
           <a class="tab" href="{{ url_for('analysis_page') }}"
              {% if request.endpoint == 'analysis_page' %}aria-current="page"{% endif %}>Strategy Analysis</a>
           <a class="tab" href="{{ url_for('play_strategy_page') }}"
              {% if request.endpoint == 'play_strategy_page' %}aria-current="page"{% endif %}>Strategy Lab</a>
+          <a class="tab" href="{{ url_for('model_report_page') }}"
+             {% if request.endpoint == 'model_report_page' %}aria-current="page"{% endif %}>Model Report</a>
         </div>
       </div>
     </nav>
@@ -758,9 +836,16 @@
 
     <footer class="foot">
       <div class="foot-inner">
-        <span>RaceOpt · F1 Strategy Analysis</span>
+        <span>RaceOpt · Independent strategy analysis tool</span>
         <span>Model: Random Forest Regressor</span>
         <span>Data: FastF1 lap telemetry</span>
+      </div>
+      <div class="foot-inner foot-disclaimer">
+        <p>
+          RaceOpt เป็นแพลตฟอร์มวิเคราะห์อิสระที่จัดทำขึ้นเพื่อการศึกษา ไม่ใช่ผลิตภัณฑ์อย่างเป็นทางการ
+          และไม่มีความเกี่ยวข้อง ไม่ได้รับการรับรอง หรือสังกัดกับ Formula 1, FIA, ทีมแข่งใดๆ หรือเครื่องหมายการค้าที่เกี่ยวข้อง
+          ตัวเลขทั้งหมดเป็นผลจากแบบจำลองทางสถิติ ไม่ใช่การพยากรณ์ผลการแข่งขันจริง
+        </p>
       </div>
     </footer>
 

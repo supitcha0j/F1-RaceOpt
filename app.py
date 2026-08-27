@@ -11,7 +11,7 @@ from data_pipeline import (load_race_laps, get_available_races, get_available_dr
 from race_simulator import (simulate_full_race, compute_win_probabilities,
                              simulate_driver, DriverStrategy, LapPredictor)
 from strategy_optimizer import (calibrate_pace_offset, grid_search_strategies,
-                                explain_parameters, simulate_strategy)
+                                explain_parameters, simulate_strategy, classify_pit_tactics)
 
 app = Flask(__name__)
 
@@ -109,9 +109,207 @@ def _build_combos():
 
 COMBOS = _build_combos()
 
-# ── หน้า 1 — Overview (หลักฐาน training) ────────────────
+
+# ── Helpers ที่ใช้ร่วมกันระหว่าง Homepage / Strategy Analysis ─
+def _extract_stints(data, meta):
+    """
+    สร้างรายการ stint จริงจาก lap data ที่โหลดแล้ว (compound, ช่วง lap, tyre degradation)
+    Compound ต่อ stint หาจากคอลัมน์ one-hot (Compound_SOFT/MEDIUM/HARD) ที่ dominant ใน stint นั้น
+    Degradation rate (s/lap) หาจาก linear fit ของ LapTimeSec เทียบ TyreLife โดยตัด out/in-lap ออก
+    """
+    stints = []
+    compound_cols = [c for c in data.columns if c.startswith("Compound_")]
+    for stint_no, grp in data.groupby("StintNumber"):
+        grp = grp.sort_values("LapNumber")
+        compound = "MEDIUM"
+        best_sum = -1
+        for col in compound_cols:
+            s = grp[col].sum()
+            if s > best_sum:
+                best_sum, compound = s, col.replace("Compound_", "")
+        clean = grp[(grp["IsOutLap"] == 0) & (grp["IsInLap"] == 0)]
+        deg_rate = None
+        if len(clean) >= 3 and clean["TyreLife"].nunique() >= 2:
+            coeffs = np.polyfit(clean["TyreLife"], clean["LapTimeSec"], 1)
+            deg_rate = round(float(coeffs[0]), 3)
+        stints.append({
+            "stint": int(stint_no), "compound": compound,
+            "start_lap": int(grp["LapNumber"].min()), "end_lap": int(grp["LapNumber"].max()),
+            "laps": int(len(grp)), "avg_pace": round(float(grp["LapTimeSec"].mean()), 3),
+            "deg_rate": deg_rate,
+        })
+    return stints
+
+
+def _driver_race_summary(year, gp, driver):
+    """สรุปกลยุทธ์จริงที่นักแข่งคนนี้ใช้ในสนามนี้ — จาก lap cache/FastF1 จริง ไม่ใช่การจำลอง"""
+    data, meta = load_race_laps(year=year, gp=gp, driver=driver)
+    stints = _extract_stints(data, meta)
+    total_time = float(data["LapTimeSec"].sum())
+    grid_position = get_race_grid(year, gp).get(driver)
+    finish_position = int(round(data.iloc[-1]["Position"])) if len(data) and "Position" in data.columns else None
+    return {
+        "driver": driver, "stints": stints,
+        "num_stops": max(len(stints) - 1, 0), "total_laps": meta["total_laps"],
+        "total_time": total_time, "total_time_str": fmt_time(total_time),
+        "grid_position": grid_position, "finish_position": finish_position,
+        "avg_lap": round(total_time / len(data), 3) if len(data) else 0.0,
+    }
+
+
+def _run_strategy_analysis(race_info, driver):
+    """
+    วิเคราะห์กลยุทธ์เต็มรูปแบบของนักแข่งคนหนึ่งในสนามนี้: calibrate โมเดล, grid search
+    หากลยุทธ์ที่เร็วกว่า, จัดกลุ่ม undercut/overcut, และดึง stint จริง
+    ใช้ร่วมกันระหว่างหน้า Homepage (สนามล่าสุด) และหน้า Strategy Analysis (เลือกเอง)
+    """
+    data, meta = load_race_laps(year=race_info["year"], gp=race_info["gp"], driver=driver)
+    y_true    = data["LapTimeSec"].values
+    X         = data.drop(columns=["LapTimeSec"]).select_dtypes(include=[np.number])
+    X_aligned = pd.DataFrame(0.0, index=X.index, columns=feature_cols)
+    common    = [c for c in feature_cols if c in X.columns]
+    X_aligned[common] = X[common].values
+    y_pred    = model.predict(X_aligned)
+
+    lap_labels  = [int(l) for l in data["LapNumber"].tolist()]
+    actual_laps = [round(float(v), 3) for v in y_true]
+    pred_laps   = [round(float(v), 3) for v in y_pred]
+
+    real_total   = float(sum(actual_laps))
+    total_laps   = meta["total_laps"]
+    race_year    = race_info["year"]
+    real_pit_lap = int(total_laps * 0.35)
+    baseline = {"first_compound": "MEDIUM", "second_compound": "SOFT",
+                "pit_lap": real_pit_lap, "num_stops": 1}
+
+    pit_loss      = estimate_pit_loss(race_year, race_info["gp"])
+    grid_position = get_race_grid(race_year, race_info["gp"]).get(driver, 1)
+
+    baseline_raw = simulate_strategy(
+        model, feature_cols, total_laps,
+        baseline["first_compound"], baseline["second_compound"],
+        baseline["pit_lap"], pace_offset=0.0, race_year=race_year,
+        pit_loss=pit_loss, grid_position=grid_position,
+    )
+    diff_before = (baseline_raw - real_total) / real_total * 100
+
+    pace_offset  = calibrate_pace_offset(model, feature_cols, actual_laps, data,
+                                         total_laps, baseline, race_year=race_year,
+                                         pit_loss=pit_loss, grid_position=grid_position)
+    baseline_cal = baseline_raw + (pace_offset * total_laps)
+    diff_after   = (baseline_cal - real_total) / real_total * 100
+    calibration  = {"pace_offset": pace_offset, "diff_before": round(diff_before, 2),
+                    "diff_after": round(diff_after, 2)}
+
+    all_results = grid_search_strategies(model, feature_cols, actual_laps, total_laps,
+                                         pace_offset=pace_offset, race_year=race_year,
+                                         pit_loss=pit_loss, grid_position=grid_position)
+    top_faster  = [r for r in all_results if r["faster"]][:5]
+    explanations = explain_parameters(top_faster[0], baseline, real_total) if top_faster else []
+    pit_tactics   = classify_pit_tactics(top_faster, baseline) if top_faster else []
+
+    mae_here  = float(np.mean(np.abs(y_true - y_pred)))
+    rmse_here = float(np.sqrt(np.mean((y_true - y_pred) ** 2)))
+    weather   = meta.get("weather") or get_race_weather(race_year, race_info["gp"])
+    incidents = get_race_incidents(race_year, race_info["gp"])
+    stints    = _extract_stints(data, meta)
+
+    result = {"race_label": race_info["label"], "driver": driver,
+              "total_laps": total_laps, "mae": f"{mae_here:.3f}", "rmse": f"{rmse_here:.3f}",
+              "real_time": fmt_time(real_total), "real_total": real_total,
+              "diff_pct": round(diff_before, 2), "weather": weather,
+              "incidents": incidents, "grid_position": grid_position,
+              "pit_loss": pit_loss, "stints": stints}
+
+    return {
+        "result": result, "lap_labels": lap_labels, "actual_laps": actual_laps,
+        "pred_laps": pred_laps, "calibration": calibration, "top_faster": top_faster,
+        "explanations": explanations, "pit_tactics": pit_tactics, "baseline": baseline,
+    }
+
+
+def _pick_homepage_focus():
+    """
+    เลือกสนาม + นักแข่งเด่นสำหรับ Homepage — สนามล่าสุดจริงตามปฏิทินของฤดูกาล (round number
+    สูงสุดใน AVAILABLE_RACES) ไม่ใช่แค่สนามที่บังเอิญมี lap cache อยู่แล้ว
+    ถ้ายังไม่เคยโหลดสนามนี้มาก่อน จะยิง fetch ไป FastF1 สดตอนโหลดหน้าแรก (ครั้งแรกอาจช้ากว่าปกติ
+    ครั้งต่อไปเร็วเพราะ cache ถูกเขียนไว้แล้ว) — route เรียกฟังก์ชันนี้ในบล็อก try/except อยู่แล้ว
+    จึงยังแสดง error state ได้ตามปกติถ้า fetch ไม่สำเร็จ (เช่น ไม่มีอินเทอร์เน็ต)
+    """
+    if not AVAILABLE_RACES:
+        race_info = AVAILABLE_RACES[_default_race_key]
+        return _default_race_key, race_info, "VER", None
+
+    race_key  = max(AVAILABLE_RACES, key=lambda k: AVAILABLE_RACES[k]["gp"])
+    race_info = AVAILABLE_RACES[race_key]
+
+    drivers = get_available_drivers(race_info["year"], race_info["gp"])
+    if not drivers:
+        return race_key, race_info, "VER", None
+
+    focus_driver = drivers[0]
+    compare_pair = drivers[:2] if len(drivers) >= 2 else None
+    return race_key, race_info, focus_driver, compare_pair
+
+
+# ── หน้า 1 — Homepage (Race Strategy Overview) ──────────
 @app.route("/")
 def index():
+    race_key, race_info, focus_driver, compare_pair = _pick_homepage_focus()
+
+    analysis = None
+    error_msg = None
+    try:
+        analysis = _run_strategy_analysis(race_info, focus_driver)
+    except Exception as e:
+        error_msg = str(e)
+
+    compare = None
+    if analysis and compare_pair and len(compare_pair) == 2:
+        try:
+            a = _driver_race_summary(race_info["year"], race_info["gp"], compare_pair[0])
+            b = _driver_race_summary(race_info["year"], race_info["gp"], compare_pair[1])
+            compare = {"a": a, "b": b}
+        except Exception as e:
+            print(f"  ข้าม driver compare บน homepage: {e}")
+
+    circuit_profile = None
+    if analysis:
+        stints = analysis["result"]["stints"]
+        deg_rates = [s["deg_rate"] for s in stints if s["deg_rate"] is not None]
+        avg_deg = round(sum(deg_rates) / len(deg_rates), 3) if deg_rates else None
+        if avg_deg is None:
+            deg_level = "Unknown"
+        elif avg_deg < 0.03:
+            deg_level = "Low"
+        elif avg_deg < 0.08:
+            deg_level = "Medium"
+        else:
+            deg_level = "High"
+
+        pit_window = None
+        if analysis["top_faster"]:
+            pits = [r["pit_lap"] for r in analysis["top_faster"]]
+            pit_window = {"min": min(pits), "max": max(pits)}
+
+        circuit_profile = {
+            "race_label": race_info["label"], "total_laps": race_info["laps"],
+            "pit_loss": analysis["result"]["pit_loss"], "weather": analysis["result"]["weather"],
+            "incidents": analysis["result"]["incidents"],
+            "deg_level": deg_level, "avg_deg": avg_deg, "pit_window": pit_window,
+        }
+
+    return render_template(
+        "index.html",
+        race_label=race_info["label"], race_key=race_key,
+        analysis=analysis, compare=compare, circuit_profile=circuit_profile,
+        error=error_msg,
+    )
+
+
+# ── หน้า Model Report — หลักฐาน training ────────────────
+@app.route("/model-report")
+def model_report_page():
     hyperparams = [
         {"name": "n_estimators",      "value": "500", "desc": "จำนวน decision trees"},
         {"name": "max_depth",         "value": "16",  "desc": "ความลึกสูงสุดของแต่ละต้น"},
@@ -168,7 +366,7 @@ def index():
     ]
 
     return render_template(
-        "index.html",
+        "model_report.html",
         hyperparams=hyperparams,
         features=features,
         train_combos=train_combos,
@@ -193,72 +391,20 @@ def analysis_page():
 
     result = error_msg = None
     lap_labels = actual_laps = pred_laps = []
-    top_faster = explanations = []
+    top_faster = explanations = pit_tactics = []
     calibration = {}
 
     if request.method == "POST":
         try:
-            data, meta = load_race_laps(year=race_info["year"], gp=race_info["gp"], driver=selected_driver)
-            y_true    = data["LapTimeSec"].values
-            X         = data.drop(columns=["LapTimeSec"]).select_dtypes(include=[np.number])
-            X_aligned = pd.DataFrame(0.0, index=X.index, columns=feature_cols)
-            common    = [c for c in feature_cols if c in X.columns]
-            X_aligned[common] = X[common].values
-            y_pred    = model.predict(X_aligned)
-
-            lap_labels  = [int(l) for l in data["LapNumber"].tolist()]
-            actual_laps = [round(float(v), 3) for v in y_true]
-            pred_laps   = [round(float(v), 3) for v in y_pred]
-
-            real_total  = float(sum(actual_laps))
-            total_laps  = meta["total_laps"]
-            race_year   = race_info["year"]
-            real_pit_lap = int(total_laps * 0.35)
-            baseline = {"first_compound": "MEDIUM", "second_compound": "SOFT",
-                        "pit_lap": real_pit_lap, "num_stops": 1}
-
-            # ปัจจัยจริงของสนามนี้ — pit loss ประมาณจาก lap cache จริง, grid position จริงของนักแข่งคนนี้
-            pit_loss = estimate_pit_loss(race_year, race_info["gp"])
-            grid_position = get_race_grid(race_year, race_info["gp"]).get(selected_driver, 1)
-
-            # diff ก่อน/หลัง calibrate ต้องวัดจากตัวเดียวกัน คือ strategy simulator
-            # ที่ grid search ใช้ ความแม่นของโมเดลบน feature จริงวัดด้วย MAE/RMSE แยกอยู่แล้ว
-            # (ก่อนหน้านี้ diff_before วัดจากผลทำนายบน feature จริง แต่ diff_after
-            #  เอา offset ที่ calibrate กับ strategy simulator มาบวก จึงเทียบกันไม่ได้
-            #  และทำให้ diff หลัง calibrate ดูแย่กว่าก่อน calibrate)
-            baseline_raw = simulate_strategy(
-                model, feature_cols, total_laps,
-                baseline["first_compound"], baseline["second_compound"],
-                baseline["pit_lap"], pace_offset=0.0, race_year=race_year,
-                pit_loss=pit_loss, grid_position=grid_position,
-            )
-            diff_before = (baseline_raw - real_total) / real_total * 100
-
-            pace_offset  = calibrate_pace_offset(model, feature_cols, actual_laps, data,
-                                                 total_laps, baseline, race_year=race_year,
-                                                 pit_loss=pit_loss, grid_position=grid_position)
-            baseline_cal = baseline_raw + (pace_offset * total_laps)
-            diff_after   = (baseline_cal - real_total) / real_total * 100
-            calibration  = {"pace_offset": pace_offset, "diff_before": round(diff_before, 2),
-                            "diff_after": round(diff_after, 2)}
-
-            all_results = grid_search_strategies(model, feature_cols, actual_laps, total_laps,
-                                                 pace_offset=pace_offset, race_year=race_year,
-                                                 pit_loss=pit_loss, grid_position=grid_position)
-            top_faster  = [r for r in all_results if r["faster"]][:5]
-            if top_faster:
-                explanations = explain_parameters(top_faster[0], baseline, real_total)
-
-            mae_here  = float(np.mean(np.abs(y_true - y_pred)))
-            rmse_here = float(np.sqrt(np.mean((y_true - y_pred) ** 2)))
-            weather   = meta.get("weather") or get_race_weather(race_year, race_info["gp"])
-            incidents = get_race_incidents(race_year, race_info["gp"])
-            result = {"race_label": race_info["label"], "driver": selected_driver,
-                      "total_laps": total_laps, "mae": f"{mae_here:.3f}", "rmse": f"{rmse_here:.3f}",
-                      "real_time": fmt_time(real_total), "real_total": real_total,
-                      "diff_pct": round(diff_before, 2), "weather": weather,
-                      "incidents": incidents, "grid_position": grid_position,
-                      "pit_loss": pit_loss}
+            analysis = _run_strategy_analysis(race_info, selected_driver)
+            result       = analysis["result"]
+            lap_labels   = analysis["lap_labels"]
+            actual_laps  = analysis["actual_laps"]
+            pred_laps    = analysis["pred_laps"]
+            calibration  = analysis["calibration"]
+            top_faster   = analysis["top_faster"]
+            explanations = analysis["explanations"]
+            pit_tactics  = analysis["pit_tactics"]
         except Exception as e:
             error_msg = str(e)
 
@@ -269,6 +415,7 @@ def analysis_page():
         result=result, error=error_msg,
         lap_labels=lap_labels, actual_laps=actual_laps, pred_laps=pred_laps,
         calibration=calibration, top_faster=top_faster, explanations=explanations,
+        pit_tactics=pit_tactics,
     )
 
 

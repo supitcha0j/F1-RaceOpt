@@ -340,6 +340,27 @@ def explain_parameters(best: dict, baseline: dict, real_total: float) -> list:
     return explanations
 
 
+def classify_pit_tactics(results: list, baseline: dict, top_n: int = 6) -> list:
+    """
+    จัดกลุ่มกลยุทธ์ที่เร็วกว่า baseline ตาม tactic การเข้าพิท
+    Undercut = เข้าพิทเร็วกว่ารอบ baseline (ยึด track position ด้วยยางใหม่ก่อนคู่แข่ง)
+    Overcut  = เข้าพิทช้ากว่ารอบ baseline (ใช้ยางเก่า push ต่อ แล้วออกมาเจอแทร็กโล่ง)
+    ใช้ผลลัพธ์ชุดเดียวกับที่ grid_search_strategies คำนวณไว้แล้ว ไม่จำลองซ้ำ
+    """
+    base_pit = baseline.get("pit_lap")
+    out = []
+    for r in results[:top_n]:
+        pit_diff = r["pit_lap"] - base_pit if base_pit is not None else 0
+        if pit_diff < 0:
+            tactic = "Undercut"
+        elif pit_diff > 0:
+            tactic = "Overcut"
+        else:
+            tactic = "Same window"
+        out.append({**r, "tactic": tactic, "pit_diff": pit_diff})
+    return out
+
+
 def _compound_reason(from_c, to_c, position):
     mapping = {
         ("MEDIUM", "SOFT",   "start"):  "Soft มี grip สูงกว่าในช่วงต้น race ช่วยให้ได้เวลาที่ดีกว่าก่อนที่ยางจะเสื่อม",
