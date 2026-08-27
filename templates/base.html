@@ -770,6 +770,64 @@
         .split > * + * { border-left: 1px solid var(--line); padding-left: 32px; }
       }
 
+      /* ── Race replay (Strategy Lab — position by lap) ───── */
+      .replay-hud {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: 14px 24px;
+      }
+      .replay-pos-row { display: flex; align-items: baseline; gap: 10px; margin-top: 4px; }
+      .replay-pos-num { font: 700 clamp(30px, 5vw, 42px)/1 var(--mono); letter-spacing: -0.02em; }
+      .replay-pos-num.flash-ok  { animation: replayFlashOk 0.6s var(--ease-out); }
+      .replay-pos-num.flash-bad { animation: replayFlashBad 0.6s var(--ease-out); }
+      @keyframes replayFlashOk  { 0% { color: var(--gain); text-shadow: 0 0 16px rgba(180,255,57,0.55); } 100% { color: var(--fg); text-shadow: none; } }
+      @keyframes replayFlashBad { 0% { color: var(--bad);  text-shadow: 0 0 16px rgba(255,92,114,0.55); } 100% { color: var(--fg); text-shadow: none; } }
+
+      .replay-pos-delta { font: 600 13px/1 var(--mono); opacity: 0; min-width: 3.5ch; }
+      .replay-pos-delta.show { animation: replayPop 1.4s var(--ease-out) both; }
+      .replay-pos-delta.ok  { color: var(--gain); }
+      .replay-pos-delta.bad { color: var(--bad); }
+      @keyframes replayPop {
+        0%   { opacity: 0; transform: translateY(3px); }
+        12%  { opacity: 1; transform: translateY(0); }
+        78%  { opacity: 1; }
+        100% { opacity: 0; }
+      }
+
+      .replay-transport { display: flex; align-items: center; gap: 10px; flex: 1 1 260px; min-width: 220px; }
+      .replay-btn {
+        display: inline-flex; align-items: center; justify-content: center;
+        width: 34px; height: 34px; flex: 0 0 auto; padding: 0;
+        background: var(--bg-sunk); border: 1px solid var(--line-2); border-radius: var(--r);
+        color: var(--fg); cursor: pointer; transition: border-color 0.12s ease, color 0.12s ease;
+      }
+      .replay-btn:hover { border-color: var(--brand-hi); color: var(--brand-hi); }
+      .replay-speed {
+        height: 34px; padding: 0 11px; flex: 0 0 auto;
+        background: var(--bg-sunk); border: 1px solid var(--line-2); border-radius: var(--r);
+        color: var(--fg-2); font: 600 11px/1 var(--mono); letter-spacing: 0.04em;
+        cursor: pointer; transition: border-color 0.12s ease, color 0.12s ease;
+      }
+      .replay-speed:hover { border-color: var(--fg-3); color: var(--fg); }
+
+      .replay-slider {
+        flex: 1 1 auto; min-width: 100px;
+        -webkit-appearance: none; appearance: none;
+        height: 3px; background: var(--line-2); border-radius: 2px; outline: none;
+      }
+      .replay-slider::-webkit-slider-thumb {
+        -webkit-appearance: none; width: 13px; height: 13px; border-radius: 50%;
+        background: var(--brand); border: 2px solid var(--bg-sunk); cursor: pointer;
+        box-shadow: 0 0 0 1px var(--brand);
+      }
+      .replay-slider::-moz-range-thumb {
+        width: 13px; height: 13px; border-radius: 50%; border: 2px solid var(--bg-sunk);
+        background: var(--brand); cursor: pointer; box-shadow: 0 0 0 1px var(--brand);
+      }
+      .replay-slider:focus-visible::-webkit-slider-thumb { box-shadow: 0 0 0 1px var(--brand), 0 0 0 4px var(--brand-wash); }
+
       /* ── Footer ────────────────────────────────── */
       .foot { border-top: 1px solid var(--line); background: var(--bg-sunk); }
       .foot-inner {

@@ -219,6 +219,40 @@
 
     <div class="panel">
       <div class="panel-head">
+        <h3 class="panel-title">อันดับตลอดการแข่ง</h3>
+        <span class="panel-note push">รอบ <span id="replayLapNow">–</span> / {{ total_laps }}</span>
+      </div>
+      <div class="panel-body">
+        <div class="replay-hud">
+          <div>
+            <p class="metric-k">ตำแหน่งของคุณ</p>
+            <div class="replay-pos-row">
+              <span class="replay-pos-num" id="replayPosNum">P{{ result.rank }}</span>
+              <span class="replay-pos-delta" id="replayPosDelta" aria-live="polite"></span>
+            </div>
+          </div>
+          <div class="replay-transport">
+            <button type="button" class="replay-btn" id="replayPlay" aria-label="เล่นย้อนดูตั้งแต่ Lap 1">
+              <svg id="iconPlay" width="12" height="12" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>
+              <svg id="iconPause" width="12" height="12" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" hidden><path d="M6 5h4v14H6zM14 5h4v14h-4z"/></svg>
+            </button>
+            <button type="button" class="replay-speed" id="replaySpeed">1×</button>
+            <input type="range" id="replaySlider" class="replay-slider" min="1" max="{{ total_laps }}" value="{{ total_laps }}" aria-label="เลื่อนดูอันดับรายรอบ" />
+          </div>
+        </div>
+        <div class="chart h-md" style="margin-top: 16px">
+          <canvas id="posChart"></canvas>
+        </div>
+        <div class="legend" style="margin-top: 10px">
+          <span><i style="background: var(--brand)"></i>คุณ</span>
+          <span><i style="background: var(--fg-3)"></i>คู่แข่งใกล้เคียง</span>
+        </div>
+      </div>
+      <div class="panel-foot">กด Play เพื่อย้อนดูอันดับตั้งแต่ Lap 1 หรือลากแถบเลื่อนดูรอบที่ต้องการ</div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head">
         <h3 class="panel-title">ผลการจำลองทั้งกริด</h3>
         <span class="panel-note push">แถวที่ทำเครื่องหมายคือกลยุทธ์ของคุณ</span>
       </div>
@@ -289,4 +323,187 @@
     sync();
   })();
 </script>
+{% if lap_progress %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+  // กราฟ "อันดับตลอดการแข่ง" — replay ที่ค่อยๆ เปิดเผยอันดับทีละรอบ แทนที่จะ
+  // โชว์เส้นเต็มเฉยๆ ให้รู้สึกเหมือนดูการแข่งจริงมากกว่าดูสรุปผลนิ่งๆ
+  (function () {
+    var progress = JSON.parse('{{ lap_progress | tojson | safe }}');
+    var totalLaps = progress.labels.length;
+    var reduceMotion = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    var canvas = document.getElementById("posChart");
+    if (!canvas || !window.Chart) return;
+
+    var INK   = "#E9EDF4";
+    var MUTED = "#67718A";
+    var GRID  = "rgba(255,255,255,0.05)";
+    var MONO  = "'IBM Plex Mono', ui-monospace, monospace";
+    var BRAND = "#E0143C";
+
+    function maskTo(series, lap) {
+      var out = series.slice(0, lap);
+      while (out.length < totalLaps) out.push(null);
+      return out;
+    }
+
+    var rivalDatasets = progress.rivals.map(function (r) {
+      return {
+        label: r.code,
+        data: maskTo(r.positions, totalLaps),
+        borderColor: MUTED, backgroundColor: MUTED,
+        borderWidth: 1.25, tension: 0, pointRadius: 0, pointHitRadius: 8,
+      };
+    });
+    var userDataset = {
+      label: "YOU",
+      data: maskTo(progress.user, totalLaps),
+      borderColor: BRAND, backgroundColor: BRAND,
+      borderWidth: 2.5, tension: 0, pointRadius: 0, pointHitRadius: 8,
+    };
+
+    var playheadPlugin = {
+      id: "replayPlayhead",
+      afterDatasetsDraw: function (chart) {
+        var lap = chart.$replayLap;
+        if (!lap || lap >= totalLaps) return;
+        var x = chart.scales.x.getPixelForValue(lap - 1);
+        var area = chart.chartArea;
+        var ctx = chart.ctx;
+        ctx.save();
+        ctx.strokeStyle = "rgba(224, 20, 60, 0.35)";
+        ctx.lineWidth = 1;
+        ctx.setLineDash([3, 3]);
+        ctx.beginPath();
+        ctx.moveTo(x, area.top);
+        ctx.lineTo(x, area.bottom);
+        ctx.stroke();
+        ctx.restore();
+      },
+    };
+
+    var chart = new Chart(canvas.getContext("2d"), {
+      type: "line",
+      data: { labels: progress.labels, datasets: rivalDatasets.concat([userDataset]) },
+      plugins: [playheadPlugin],
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        animation: reduceMotion ? false : { duration: 180, easing: "linear" },
+        interaction: { mode: "index", intersect: false },
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            backgroundColor: "#070911", borderColor: "#323C51", borderWidth: 1,
+            titleColor: INK, bodyColor: INK, cornerRadius: 3, padding: 10,
+            titleFont: { family: MONO, size: 10 }, bodyFont: { family: MONO, size: 11 },
+            callbacks: {
+              title: function (items) { return "LAP " + items[0].label; },
+              label: function (ctx) { return (ctx.dataset.label === "YOU" ? "คุณ" : ctx.dataset.label) + ": P" + ctx.parsed.y; },
+            },
+          },
+        },
+        scales: {
+          x: {
+            title: { display: true, text: "LAP", color: MUTED, font: { family: MONO, size: 10 } },
+            ticks: { color: MUTED, maxRotation: 0, autoSkipPadding: 16, font: { family: MONO, size: 10 } },
+            grid: { color: GRID, drawTicks: false },
+            border: { color: "#323C51" },
+          },
+          y: {
+            reverse: true, min: 1, max: progress.field_size,
+            ticks: { color: MUTED, stepSize: 1, font: { family: MONO, size: 10 }, callback: function (v) { return "P" + v; } },
+            title: { display: true, text: "POSITION", color: MUTED, font: { family: MONO, size: 10 } },
+            grid: { color: GRID, drawTicks: false },
+            border: { color: "#323C51" },
+          },
+        },
+      },
+    });
+
+    var lapNowEl  = document.getElementById("replayLapNow");
+    var posNumEl  = document.getElementById("replayPosNum");
+    var deltaEl   = document.getElementById("replayPosDelta");
+    var slider    = document.getElementById("replaySlider");
+    var playBtn   = document.getElementById("replayPlay");
+    var speedBtn  = document.getElementById("replaySpeed");
+    var iconPlay  = document.getElementById("iconPlay");
+    var iconPause = document.getElementById("iconPause");
+
+    var BASE_INTERVAL = 220; // ms ต่อรอบ ที่ความเร็ว 1×
+    var speeds = [1, 2, 4];
+    var speedIdx = 0;
+    var timer = null;
+    var currentLap = totalLaps;
+
+    function render(lap) {
+      currentLap = lap;
+      lapNowEl.textContent = lap;
+      slider.value = lap;
+
+      rivalDatasets.forEach(function (ds, i) {
+        ds.data = maskTo(progress.rivals[i].positions, lap);
+      });
+      userDataset.data = maskTo(progress.user, lap);
+      chart.data.datasets = rivalDatasets.concat([userDataset]);
+      chart.$replayLap = lap;
+      chart.update(reduceMotion ? "none" : undefined);
+
+      var pos = progress.user[lap - 1];
+      var prevPos = lap > 1 ? progress.user[lap - 2] : pos;
+      posNumEl.textContent = "P" + pos;
+
+      posNumEl.classList.remove("flash-ok", "flash-bad");
+      deltaEl.classList.remove("show", "ok", "bad");
+      if (pos !== prevPos) {
+        var climbed = pos < prevPos; // เลขอันดับลดลง = ไล่ขึ้น
+        void posNumEl.offsetWidth; // restart keyframe
+        posNumEl.classList.add(climbed ? "flash-ok" : "flash-bad");
+        deltaEl.textContent = climbed ? "▲ +" + (prevPos - pos) : "▼ -" + (pos - prevPos);
+        void deltaEl.offsetWidth;
+        deltaEl.classList.add("show", climbed ? "ok" : "bad");
+      } else {
+        deltaEl.textContent = "";
+      }
+    }
+
+    function stop() {
+      clearInterval(timer);
+      timer = null;
+      iconPlay.hidden = false;
+      iconPause.hidden = true;
+      playBtn.setAttribute("aria-label", "เล่นย้อนดูตั้งแต่ Lap 1");
+    }
+
+    function tick() {
+      if (currentLap >= totalLaps) { stop(); return; }
+      render(currentLap + 1);
+    }
+
+    function play() {
+      if (currentLap >= totalLaps) render(1);
+      iconPlay.hidden = true;
+      iconPause.hidden = false;
+      playBtn.setAttribute("aria-label", "หยุดชั่วคราว");
+      timer = setInterval(tick, BASE_INTERVAL / speeds[speedIdx]);
+    }
+
+    playBtn.addEventListener("click", function () {
+      if (timer) stop(); else play();
+    });
+    speedBtn.addEventListener("click", function () {
+      speedIdx = (speedIdx + 1) % speeds.length;
+      speedBtn.textContent = speeds[speedIdx] + "×";
+      if (timer) { clearInterval(timer); timer = setInterval(tick, BASE_INTERVAL / speeds[speedIdx]); }
+    });
+    slider.addEventListener("input", function () {
+      stop();
+      render(parseInt(slider.value, 10));
+    });
+
+    render(totalLaps);
+  })();
+</script>
+{% endif %}
 {% endblock %}

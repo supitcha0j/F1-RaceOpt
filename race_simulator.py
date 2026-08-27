@@ -276,6 +276,17 @@ def simulate_full_race(
     return results
 
 
+def compute_lap_positions(results: List[DriverResult], total_laps: int) -> Dict[str, List[int]]:
+    """
+    อันดับของทุกคนใน "แต่ละ" รอบ (ไม่ใช่แค่อันดับสุดท้าย) — คำนวณจากเวลาสะสม
+    (cumulative time) ถึง lap นั้นๆ ใช้ทำกราฟ position-by-lap ที่เห็นการไล่แซง
+    ขึ้น-ลงระหว่างแข่ง แทนที่จะเห็นแค่ผลลัพธ์ปลายทาง
+    """
+    cum = np.array([np.cumsum(r.laps[:total_laps]) for r in results])  # (n_drivers, total_laps)
+    ranks = np.argsort(np.argsort(cum, axis=0), axis=0) + 1
+    return {r.code: ranks[i].tolist() for i, r in enumerate(results)}
+
+
 def compute_win_probabilities(results: List[DriverResult]) -> Dict[str, float]:
     times = np.array([r.total_time for r in results])
     scores = -times

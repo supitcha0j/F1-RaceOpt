@@ -9,7 +9,8 @@ from data_pipeline import (load_race_laps, get_available_races, get_available_dr
                             get_latest_completed_season, get_race_weather,
                             get_race_grid, get_race_incidents, estimate_pit_loss)
 from race_simulator import (simulate_full_race, compute_win_probabilities,
-                             simulate_driver, DriverStrategy, LapPredictor)
+                             simulate_driver, DriverStrategy, LapPredictor,
+                             compute_lap_positions)
 from strategy_optimizer import (calibrate_pace_offset, grid_search_strategies,
                                 explain_parameters, simulate_strategy, classify_pit_tactics)
 
@@ -526,11 +527,24 @@ def play_strategy_page():
             "gap_to_p1": round(r.total_time - p1_time, 2),
         } for r in combined]
 
+        # อันดับของคุณในทุกๆ รอบ (ไม่ใช่แค่ผลสุดท้าย) — สำหรับกราฟ position replay
+        # แสดงเฉพาะคู่แข่งที่จบใกล้อันดับคุณ (±2) ให้เห็นบริบทว่าไล่แซงใครระหว่างทาง
+        lap_positions = compute_lap_positions(combined, total_laps)
+        idx = user_rank - 1
+        context_codes = [r.code for r in combined[max(0, idx - 2):idx + 3] if r.code != "YOU"]
+        lap_progress = {
+            "labels": list(range(1, total_laps + 1)),
+            "field_size": len(combined),
+            "user": lap_positions["YOU"],
+            "rivals": [{"code": c, "positions": lap_positions[c]} for c in context_codes],
+        }
+
     return render_template(
         "play_strategy.html",
         total_laps=total_laps,
         result=result,
         leaderboard=leaderboard,
+        lap_progress=lap_progress if result else None,
         form_data=form_data,
         available_races=AVAILABLE_RACES,
         selected_race_key=selected_race_key,
