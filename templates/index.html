@@ -38,61 +38,67 @@
 {% block content %}
 
 <!-- ═══ 01 · Hero — latest race analysis ═══════════════════ -->
-<section class="hero carbon" aria-label="ภาพรวมสนามล่าสุด">
-  <span class="hero-bar" aria-hidden="true"></span>
-  <p class="eyebrow">{% if analysis %}Latest analysed race{% else %}Race strategy overview{% endif %}</p>
-  <h1 class="hero-headline">
-    {% if analysis %}{{ analysis.result.race_label }} — <span class="hl">strategy read</span>
-    {% else %}Race strategy, <span class="hl">read from telemetry</span>{% endif %}
-  </h1>
-  <p class="hero-lede">
-    {% if analysis %}
-    วิเคราะห์กลยุทธ์ของ {{ analysis.result.driver }} จาก lap telemetry จริงของ FastF1 — calibrate โมเดลกับเวลาจริง
-    แล้ว grid search หาชุดยาง/รอบพิทที่เร็วกว่า พร้อมจำแนก undercut/overcut และ tyre degradation ต่อ stint
-    {% else %}
-    เครื่องมือวิเคราะห์กลยุทธ์การแข่งขัน F1 ที่ทำงานบนข้อมูล lap telemetry จริงและโมเดล Random Forest
-    {% endif %}
-  </p>
-
-  {% if analysis %}
-  <div class="metrics cols-4" style="margin-top: 24px">
-    <div class="metric">
-      <span class="metric-k">Real race time</span>
-      <span class="metric-v accent">{{ analysis.result.real_time }}</span>
-      <span class="metric-u">{{ analysis.result.total_laps }} laps · {{ analysis.result.driver }}</span>
-    </div>
-    <div class="metric">
-      <span class="metric-k">Model accuracy</span>
-      <span class="metric-v accent" data-countup="{{ analysis.result.mae }}">{{ analysis.result.mae }}</span>
-      <span class="metric-u">MAE s / lap</span>
-    </div>
-    <div class="metric">
-      <span class="metric-k">Best strategy found</span>
-      {% if analysis.top_faster %}
-      <span class="metric-v accent">−<span data-countup="{{ "%.1f"|format(analysis.top_faster[0].delta_sec|abs) }}">{{ "%.1f"|format(analysis.top_faster[0].delta_sec|abs) }}</span> s</span>
-      <span class="metric-u">vs real race time</span>
-      {% else %}
-      <span class="metric-v accent">—</span>
-      <span class="metric-u">no faster strategy found</span>
-      {% endif %}
-    </div>
-    <div class="metric">
-      <span class="metric-k">Conditions</span>
-      <span class="metric-v accent">{% if analysis.result.weather %}{{ "WET" if analysis.result.weather.wet else "DRY" }}{% else %}—{% endif %}</span>
-      <span class="metric-u">{% if analysis.result.weather %}{{ analysis.result.weather.track_temp }}°C track{% else %}no weather data{% endif %}</span>
-    </div>
+<section class="hero hero-photo" aria-label="ภาพรวมสนามล่าสุด">
+  <div class="hero-media">
+    <img src="{{ url_for('static', filename='img/hero-car.jpg') }}" alt=""
+         width="1200" height="810" loading="eager" decoding="async" />
   </div>
-  {% endif %}
+  <div class="hero-content">
+    <span class="hero-bar" aria-hidden="true"></span>
+    <p class="eyebrow">{% if analysis %}Latest analysed race{% else %}Race strategy overview{% endif %}</p>
+    <h1 class="hero-headline">
+      {% if analysis %}{{ analysis.result.race_label }} — <span class="hl">strategy read</span>
+      {% else %}Race strategy, <span class="hl">read from telemetry</span>{% endif %}
+    </h1>
+    <p class="hero-lede">
+      {% if analysis %}
+      วิเคราะห์กลยุทธ์ของ {{ analysis.result.driver }} จาก lap telemetry จริงของ FastF1 — calibrate โมเดลกับเวลาจริง
+      แล้ว grid search หาชุดยาง/รอบพิทที่เร็วกว่า พร้อมจำแนก undercut/overcut และ tyre degradation ต่อ stint
+      {% else %}
+      เครื่องมือวิเคราะห์กลยุทธ์การแข่งขัน F1 ที่ทำงานบนข้อมูล lap telemetry จริงและโมเดล Random Forest
+      {% endif %}
+    </p>
 
-  <div class="hero-actions">
-    <a class="btn" href="{{ url_for('analysis_page') }}">
-      เปิด Strategy Analysis
-      <svg class="btn-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
-    </a>
-    <a class="btn ghost" href="{{ url_for('play_strategy_page') }}">
-      ไปที่ Strategy Lab
-      <svg class="btn-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
-    </a>
+    {% if analysis %}
+    <div class="metrics cols-4" style="margin-top: 24px">
+      <div class="metric">
+        <span class="metric-k">Real race time</span>
+        <span class="metric-v accent">{{ analysis.result.real_time }}</span>
+        <span class="metric-u">{{ analysis.result.total_laps }} laps · {{ analysis.result.driver }}</span>
+      </div>
+      <div class="metric">
+        <span class="metric-k">Model accuracy</span>
+        <span class="metric-v accent" data-countup="{{ analysis.result.mae }}">{{ analysis.result.mae }}</span>
+        <span class="metric-u">MAE s / lap</span>
+      </div>
+      <div class="metric">
+        <span class="metric-k">Best strategy found</span>
+        {% if analysis.top_faster %}
+        <span class="metric-v accent">−<span data-countup="{{ "%.1f"|format(analysis.top_faster[0].delta_sec|abs) }}">{{ "%.1f"|format(analysis.top_faster[0].delta_sec|abs) }}</span> s</span>
+        <span class="metric-u">vs real race time</span>
+        {% else %}
+        <span class="metric-v accent">—</span>
+        <span class="metric-u">no faster strategy found</span>
+        {% endif %}
+      </div>
+      <div class="metric">
+        <span class="metric-k">Conditions</span>
+        <span class="metric-v accent">{% if analysis.result.weather %}{{ "WET" if analysis.result.weather.wet else "DRY" }}{% else %}—{% endif %}</span>
+        <span class="metric-u">{% if analysis.result.weather %}{{ analysis.result.weather.track_temp }}°C track{% else %}no weather data{% endif %}</span>
+      </div>
+    </div>
+    {% endif %}
+
+    <div class="hero-actions">
+      <a class="btn" href="{{ url_for('analysis_page') }}">
+        เปิด Strategy Analysis
+        <svg class="btn-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+      </a>
+      <a class="btn ghost" href="{{ url_for('play_strategy_page') }}">
+        ไปที่ Strategy Lab
+        <svg class="btn-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+      </a>
+    </div>
   </div>
 </section>
 
@@ -373,7 +379,12 @@
     </div>
     <div class="metric">
       <span class="metric-k">Fast pit window</span>
-      <span class="metric-v">{% if circuit_profile.pit_window %}L{{ circuit_profile.pit_window.min }}–{{ circuit_profile.pit_window.max }}{% else %}—{% endif %}</span>
+      <span class="metric-v">
+        {%- if not circuit_profile.pit_window -%}—
+        {%- elif circuit_profile.pit_window.min == circuit_profile.pit_window.max -%}L{{ circuit_profile.pit_window.min }}
+        {%- else -%}L{{ circuit_profile.pit_window.min }}–{{ circuit_profile.pit_window.max }}
+        {%- endif -%}
+      </span>
       <span class="metric-u">from grid search</span>
     </div>
   </div>
