@@ -382,11 +382,13 @@ def model_report_page():
 
 @app.route("/analysis", methods=["GET", "POST"])
 def analysis_page():
-    selected_race_key = request.form.get("race_key", _default_race_key)
+    # request.values (ไม่ใช่แค่ request.form) เพื่อให้ลิงก์แบบ /analysis?race_key=..&driver=..
+    # จากหน้า Circuit Library / Records เปิดมาแล้ววิเคราะห์ได้ทันที ไม่ต้องกดฟอร์มซ้ำ
+    selected_race_key = request.values.get("race_key", _default_race_key)
     race_info = AVAILABLE_RACES.get(selected_race_key, AVAILABLE_RACES[_default_race_key])
 
     available_drivers = get_available_drivers(race_info["year"], race_info["gp"])
-    selected_driver = request.form.get("driver", "VER")
+    selected_driver = request.values.get("driver", "VER")
     if selected_driver not in available_drivers and available_drivers:
         selected_driver = available_drivers[0]
 
@@ -395,7 +397,7 @@ def analysis_page():
     top_faster = explanations = pit_tactics = []
     calibration = {}
 
-    if request.method == "POST":
+    if request.method == "POST" or request.args.get("race_key"):
         try:
             analysis = _run_strategy_analysis(race_info, selected_driver)
             result       = analysis["result"]
@@ -423,7 +425,8 @@ def analysis_page():
 # ── หน้า 3 — Play Strategy ──────────────────────────────
 @app.route("/play", methods=["GET", "POST"])
 def play_strategy_page():
-    selected_race_key = request.form.get("race_key", _default_race_key)
+    # request.values เพื่อให้ /play?race_key=.. จาก Circuit Library เลือกสนามให้ล่วงหน้าได้
+    selected_race_key = request.values.get("race_key", _default_race_key)
     race_info  = AVAILABLE_RACES.get(selected_race_key, AVAILABLE_RACES[_default_race_key])
     total_laps = race_info["laps"]
     result = None; leaderboard = []; form_data = None
@@ -552,6 +555,104 @@ def play_strategy_page():
         selected_race_key=selected_race_key,
         race_label=race_info["label"],
     )
+
+
+# ── หน้า Circuit Library — โปรไฟล์กลยุทธ์รายสนามจาก combination ที่วิเคราะห์แล้วจริง ──
+@app.route("/circuits")
+def circuits_page():
+    round_to_race = {(info["year"], info["gp"]): (key, info) for key, info in AVAILABLE_RACES.items()}
+
+    groups = {}
+    for c in COMBOS:
+        groups.setdefault((c["year"], c["round"]), []).append(c)
+
+    circuits = []
+    for (year, round_no), combos in groups.items():
+        race_key, race_info = round_to_race.get((year, round_no), (None, None))
+        label      = race_info["label"] if race_info else f"{combos[0]['gp']} GP {year}"
+        total_laps = race_info["laps"] if race_info else combos[0]["laps"]
+        pit_loss   = estimate_pit_loss(year, round_no)
+
+        # โปรไฟล์ tyre degradation จาก stint จริงของนักแข่งคนแรกที่มี lap cache อยู่แล้ว —
+        # ไม่ fetch ใหม่ เพราะคนนี้ถูกค้นพบจาก cache/*.pkl ตอน build COMBOS อยู่แล้ว
+        deg_level, avg_deg = "Unknown", None
+        try:
+            data, meta = load_race_laps(year=year, gp=round_no, driver=combos[0]["driver"])
+            stints = _extract_stints(data, meta)
+            deg_rates = [s["deg_rate"] for s in stints if s["deg_rate"] is not None]
+            if deg_rates:
+                avg_deg = round(sum(deg_rates) / len(deg_rates), 3)
+                deg_level = "Low" if avg_deg < 0.03 else "Medium" if avg_deg < 0.08 else "High"
+        except Exception:
+            pass
+
+        circuits.append({
+            "race_key": race_key, "label": label, "year": year, "total_laps": total_laps,
+            "pit_loss": pit_loss, "deg_level": deg_level, "avg_deg": avg_deg,
+            "drivers_analyzed": sorted(set(c["driver"] for c in combos)),
+            "avg_diff_pct": round(sum(c["diff_pct"] for c in combos) / len(combos), 2),
+            "weather": combos[0]["weather"],
+        })
+
+    circuits.sort(key=lambda c: (-c["year"], c["label"]))
+    wet_count    = sum(1 for c in circuits if c["weather"] and c["weather"]["wet"])
+    avg_pit_loss = round(sum(c["pit_loss"] for c in circuits) / len(circuits), 1) if circuits else 0.0
+
+    return render_template(
+        "circuits.html", circuits=circuits, wet_count=wet_count, avg_pit_loss=avg_pit_loss,
+    )
+
+
+# ── หน้า Records — สถิติเด่นรวมจากทุก combination ที่โมเดลเคยตรวจสอบจริง ──
+@app.route("/records")
+def records_page():
+    if not COMBOS:
+        return render_template("records.html", combos=[], records=None)
+
+    round_to_key = {(info["year"], info["gp"]): key for key, info in AVAILABLE_RACES.items()}
+
+    def _with_link(c):
+        return {**c, "race_key": round_to_key.get((c["year"], c["round"]))}
+
+    combos      = [_with_link(c) for c in COMBOS]
+    by_accuracy = sorted(combos, key=lambda c: abs(c["diff_pct"]))
+    by_pace     = sorted(combos, key=lambda c: c["real_total"] / c["laps"])
+    wet_combos  = [c for c in combos if c["weather"] and c["weather"]["wet"]]
+    dry_combos  = [c for c in combos if c["weather"] and not c["weather"]["wet"]]
+
+    records = {
+        "most_accurate":  by_accuracy[0],
+        "least_accurate": by_accuracy[-1],
+        "fastest_pace":   by_pace[0],
+        "slowest_pace":   by_pace[-1],
+        "longest_race":   max(combos, key=lambda c: c["laps"]),
+        "wet_count": len(wet_combos), "dry_count": len(dry_combos),
+        "circuit_count": len({(c["year"], c["round"]) for c in combos}),
+        "total_laps": sum(c["laps"] for c in combos),
+    }
+
+    return render_template(
+        "records.html",
+        best5=by_accuracy[:5],
+        worst5=list(reversed(by_accuracy[-5:])),
+        records=records,
+    )
+
+
+# ── หน้า About — วิธีทำงานของระบบ ที่มาของข้อมูล และขอบเขตของผลลัพธ์ ──
+@app.route("/about")
+def about_page():
+    return render_template(
+        "about.html",
+        mae=MODEL_MAE, rmse=MODEL_RMSE, combo_count=len(COMBOS),
+        total_laps_trained=sum(c["laps"] for c in COMBOS) if COMBOS else 0,
+        circuit_count=len({(c["year"], c["round"]) for c in COMBOS}) if COMBOS else 0,
+    )
+
+
+@app.errorhandler(404)
+def not_found(e):
+    return render_template("404.html"), 404
 
 
 if __name__ == "__main__":

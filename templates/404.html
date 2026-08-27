@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block title %}404 · RaceOpt{% endblock %}
+
+{% block content %}
+
+<div class="empty" style="padding: 72px 24px; text-align: center">
+  <span class="chk" aria-hidden="true" style="margin: 0 auto 18px"></span>
+  <p class="eyebrow">Error 404</p>
+  <h1 class="page-title" style="margin-top: 8px">ไม่พบหน้านี้ในสนาม</h1>
+  <p class="empty-note" style="margin: 10px auto 0; max-width: 52ch">
+    ลิงก์อาจเปลี่ยนไปแล้ว หรือ URL พิมพ์ผิด — กลับไปหน้าที่มีอยู่จริงได้จากด้านล่าง
+  </p>
+  <div class="hero-actions" style="justify-content: center; margin-top: 26px">
+    <a class="btn" href="{{ url_for('index') }}">
+      กลับหน้าแรก
+      <svg class="btn-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+    </a>
+    <a class="btn ghost" href="{{ url_for('circuits_page') }}">Circuit Library</a>
+    <a class="btn ghost" href="{{ url_for('play_strategy_page') }}">Strategy Lab</a>
+  </div>
+</div>
+
+{% endblock %}

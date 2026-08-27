@@ -1,0 +1,191 @@
+{% extends "base.html" %}
+{% block title %}Records · RaceOpt{% endblock %}
+
+{%- macro combo_link(c) -%}
+{%- if c.race_key -%}{{ url_for('analysis_page', race_key=c.race_key, driver=c.driver) }}{%- else -%}{{ url_for('analysis_page') }}{%- endif -%}
+{%- endmacro -%}
+
+{% block content %}
+
+<header class="page-head">
+  <p class="eyebrow">Records</p>
+  <h1 class="page-title">Hall of Fame</h1>
+  <p class="lede">
+    สถิติเด่นที่สุดจากทุก combination นักแข่ง/สนามที่โมเดลเคยตรวจสอบจริงกับ lap telemetry —
+    ไม่ใช่การจำลอง แต่เป็นตัวเลขที่ประมวลผลจากข้อมูลจริงทุกแถว
+  </p>
+</header>
+
+{% if not records %}
+<div class="empty">
+  <p class="empty-title">ยังไม่มีข้อมูลพอทำสถิติ</p>
+  <p class="empty-note">เปิด Strategy Analysis แล้ววิเคราะห์สักสองสามสนาม ข้อมูลจะมาปรากฏที่นี่</p>
+</div>
+{% else %}
+
+<div class="metrics cols-4">
+  <div class="metric">
+    <span class="metric-k">Circuits covered</span>
+    <span class="metric-v" data-countup="{{ records.circuit_count }}">{{ records.circuit_count }}</span>
+    <span class="metric-u">from cached telemetry</span>
+  </div>
+  <div class="metric">
+    <span class="metric-k">Laps evaluated</span>
+    <span class="metric-v" data-countup="{{ records.total_laps }}">{{ records.total_laps }}</span>
+    <span class="metric-u">across all combinations</span>
+  </div>
+  <div class="metric">
+    <span class="metric-k">Dry combinations</span>
+    <span class="metric-v" data-countup="{{ records.dry_count }}">{{ records.dry_count }}</span>
+    <span class="metric-u">of {{ records.dry_count + records.wet_count }}</span>
+  </div>
+  <div class="metric">
+    <span class="metric-k">Wet combinations</span>
+    <span class="metric-v" data-countup="{{ records.wet_count }}">{{ records.wet_count }}</span>
+    <span class="metric-u">of {{ records.dry_count + records.wet_count }}</span>
+  </div>
+</div>
+
+<!-- ═══ Headline records ════════════════════════════════ -->
+<section aria-labelledby="rec-h" style="margin-top: 28px">
+  <div class="section-head">
+    <span class="section-no">01</span>
+    <h2 class="section-title" id="rec-h">Standout combinations</h2>
+    <span class="section-note">real vs simulated, ณ combination นั้น</span>
+  </div>
+
+  <div class="card-grid">
+
+    <a class="panel accent hoverable card-link" href="{{ combo_link(records.most_accurate) }}">
+      <div class="panel-head">
+        <h3 class="panel-title">โมเดลแม่นที่สุด</h3>
+        <span class="panel-note push">{{ records.most_accurate.year }}</span>
+      </div>
+      <div class="panel-body">
+        <p class="eyebrow muted">{{ records.most_accurate.driver }} · {{ records.most_accurate.gp }}</p>
+        <p class="gain-big ok" style="margin-top: 8px">{{ "%+.2f"|format(records.most_accurate.diff_pct) }}<span class="big">%</span></p>
+        <p class="kv" style="margin-top: 6px">MAE {{ "%.3f"|format(records.most_accurate.mae) }} s/lap</p>
+      </div>
+    </a>
+
+    <a class="panel hoverable card-link" href="{{ combo_link(records.least_accurate) }}">
+      <div class="panel-head">
+        <h3 class="panel-title">คลาดเคลื่อนที่สุด</h3>
+        <span class="panel-note push">{{ records.least_accurate.year }}</span>
+      </div>
+      <div class="panel-body">
+        <p class="eyebrow muted">{{ records.least_accurate.driver }} · {{ records.least_accurate.gp }}</p>
+        <p class="gain-big warn" style="margin-top: 8px">{{ "%+.2f"|format(records.least_accurate.diff_pct) }}<span class="big">%</span></p>
+        <p class="kv" style="margin-top: 6px">MAE {{ "%.3f"|format(records.least_accurate.mae) }} s/lap</p>
+      </div>
+    </a>
+
+    <a class="panel hoverable card-link" href="{{ combo_link(records.fastest_pace) }}">
+      <div class="panel-head">
+        <h3 class="panel-title">Pace เร็วที่สุด (เฉลี่ย/รอบ)</h3>
+        <span class="panel-note push">{{ records.fastest_pace.year }}</span>
+      </div>
+      <div class="panel-body">
+        <p class="eyebrow muted">{{ records.fastest_pace.driver }} · {{ records.fastest_pace.gp }}</p>
+        <p class="big" style="margin-top: 8px">{{ "%.2f"|format(records.fastest_pace.real_total / records.fastest_pace.laps) }} s/lap</p>
+        <p class="kv" style="margin-top: 6px">{{ records.fastest_pace.laps }} laps</p>
+      </div>
+    </a>
+
+    <a class="panel hoverable card-link" href="{{ combo_link(records.slowest_pace) }}">
+      <div class="panel-head">
+        <h3 class="panel-title">Pace ช้าที่สุด (เฉลี่ย/รอบ)</h3>
+        <span class="panel-note push">{{ records.slowest_pace.year }}</span>
+      </div>
+      <div class="panel-body">
+        <p class="eyebrow muted">{{ records.slowest_pace.driver }} · {{ records.slowest_pace.gp }}</p>
+        <p class="big" style="margin-top: 8px">{{ "%.2f"|format(records.slowest_pace.real_total / records.slowest_pace.laps) }} s/lap</p>
+        <p class="kv" style="margin-top: 6px">{{ records.slowest_pace.laps }} laps</p>
+      </div>
+    </a>
+
+    <a class="panel hoverable card-link" href="{{ combo_link(records.longest_race) }}">
+      <div class="panel-head">
+        <h3 class="panel-title">การแข่งที่ยาวที่สุด</h3>
+        <span class="panel-note push">{{ records.longest_race.year }}</span>
+      </div>
+      <div class="panel-body">
+        <p class="eyebrow muted">{{ records.longest_race.driver }} · {{ records.longest_race.gp }}</p>
+        <p class="rank-big" style="margin-top: 4px">{{ records.longest_race.laps }}</p>
+        <p class="kv" style="margin-top: 6px">laps evaluated</p>
+      </div>
+    </a>
+
+  </div>
+</section>
+
+<!-- ═══ Leaderboards ════════════════════════════════════ -->
+<section aria-labelledby="lead-h" style="margin-top: 28px">
+  <div class="section-head">
+    <span class="section-no">02</span>
+    <h2 class="section-title" id="lead-h">Model accuracy leaderboard</h2>
+    <span class="section-note">|deviation| น้อยสุด vs มากสุด</span>
+  </div>
+
+  <div class="split">
+    <div>
+      <p class="eyebrow muted" style="margin-bottom: 10px">แม่นที่สุด 5 อันดับ</p>
+      <div class="panel">
+        <div class="tbl-wrap" tabindex="0" role="region" aria-label="ตารางแม่นที่สุด 5 อันดับ">
+          <table class="tbl">
+            <thead>
+              <tr>
+                <th scope="col">Driver</th>
+                <th scope="col">Grand Prix</th>
+                <th scope="col" class="t-num">Deviation</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for c in best5 %}
+              <tr>
+                <td><a href="{{ combo_link(c) }}" style="color: inherit; text-decoration: none; font-weight: 500">{{ c.driver }}</a></td>
+                <td class="wrap dim">{{ c.gp }} {{ c.year }}</td>
+                <td class="t-num ok" style="font-weight: 500">{{ "%+.2f"|format(c.diff_pct) }}%</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <p class="eyebrow muted" style="margin-bottom: 10px">คลาดเคลื่อนที่สุด 5 อันดับ</p>
+      <div class="panel">
+        <div class="tbl-wrap" tabindex="0" role="region" aria-label="ตารางคลาดเคลื่อนที่สุด 5 อันดับ">
+          <table class="tbl">
+            <thead>
+              <tr>
+                <th scope="col">Driver</th>
+                <th scope="col">Grand Prix</th>
+                <th scope="col" class="t-num">Deviation</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for c in worst5 %}
+              <tr>
+                <td><a href="{{ combo_link(c) }}" style="color: inherit; text-decoration: none; font-weight: 500">{{ c.driver }}</a></td>
+                <td class="wrap dim">{{ c.gp }} {{ c.year }}</td>
+                <td class="t-num {% if c.diff_pct|abs < 3 %}warn{% else %}bad{% endif %}" style="font-weight: 500">{{ "%+.2f"|format(c.diff_pct) }}%</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+  <p class="section-sub" style="margin-top: 10px">
+    รายละเอียดครบทุก combination และ hyperparameter ของโมเดล ดูต่อที่
+    <a href="{{ url_for('model_report_page') }}" style="color: var(--brand); text-decoration: underline">Model Report</a>
+  </p>
+</section>
+
+{% endif %}
+
+{% endblock %}

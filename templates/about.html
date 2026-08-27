@@ -1,0 +1,130 @@
+{% extends "base.html" %}
+{% block title %}About · RaceOpt{% endblock %}
+
+{% block content %}
+
+<header class="page-head">
+  <p class="eyebrow">About RaceOpt</p>
+  <h1 class="page-title">วิธีทำงานของระบบ</h1>
+  <p class="lede">
+    RaceOpt ประมวลผลกลยุทธ์การแข่งขัน F1 จาก lap telemetry จริงทั้งเส้นทาง — ตั้งแต่ดึงข้อมูลดิบ,
+    train โมเดลทำนายเวลาต่อรอบ, จำลองการแข่งขันทั้งกริด ไปจนถึงค้นหากลยุทธ์ทางเลือกที่เร็วกว่า
+  </p>
+</header>
+
+<div class="notice notice-warn">
+  <p class="notice-title">ขอบเขตของเครื่องมือ</p>
+  <p>
+    RaceOpt เป็นแพลตฟอร์มวิเคราะห์อิสระที่จัดทำขึ้นเพื่อการศึกษา ไม่ใช่ผลิตภัณฑ์อย่างเป็นทางการ
+    และไม่มีความเกี่ยวข้อง ไม่ได้รับการรับรอง หรือสังกัดกับ Formula 1, FIA, ทีมแข่งใดๆ หรือเครื่องหมายการค้าที่เกี่ยวข้อง
+    ตัวเลขทั้งหมดเป็นผลจากแบบจำลองทางสถิติที่ train จากอดีต ไม่ใช่การพยากรณ์ผลการแข่งขันจริงในอนาคต
+    และไม่ได้จำลองปัจจัยอย่างพัฒนาการของรถ, กลยุทธ์ทีมคู่แข่งแบบ real-time, หรือการตัดสินใจของนักแข่งกลางสนาม
+  </p>
+</div>
+
+<div class="metrics cols-4" style="margin-top: 20px">
+  <div class="metric">
+    <span class="metric-k">Model MAE</span>
+    <span class="metric-v accent" data-countup="{{ "%.3f"|format(mae) }}">{{ "%.3f"|format(mae) }}</span>
+    <span class="metric-u">s / lap · test set</span>
+  </div>
+  <div class="metric">
+    <span class="metric-k">Model RMSE</span>
+    <span class="metric-v accent" data-countup="{{ "%.3f"|format(rmse) }}">{{ "%.3f"|format(rmse) }}</span>
+    <span class="metric-u">s / lap · test set</span>
+  </div>
+  <div class="metric">
+    <span class="metric-k">Combinations validated</span>
+    <span class="metric-v" data-countup="{{ combo_count }}">{{ combo_count }}</span>
+    <span class="metric-u">driver × circuit</span>
+  </div>
+  <div class="metric">
+    <span class="metric-k">Circuits covered</span>
+    <span class="metric-v" data-countup="{{ circuit_count }}">{{ circuit_count }}</span>
+    <span class="metric-u">laps trained: {{ total_laps_trained }}</span>
+  </div>
+</div>
+
+<!-- ═══ 01 · Data ═══════════════════════════════════════ -->
+<section aria-labelledby="data-h" style="margin-top: 28px">
+  <div class="section-head">
+    <span class="section-no">01</span>
+    <h2 class="section-title" id="data-h">Data — FastF1 lap telemetry</h2>
+    <span class="section-note">ต้นทางข้อมูลทั้งหมด</span>
+  </div>
+  <p class="section-sub">
+    ทุกตัวเลขในเว็บนี้เริ่มจาก <a href="https://docs.fastf1.dev/" target="_blank" rel="noopener" style="color: var(--brand); text-decoration: underline">FastF1</a> —
+    ไลบรารีที่ดึงข้อมูล timing/telemetry อย่างเป็นทางการของ F1 มาแปลงเป็น lap-by-lap dataset ต่อคน:
+    เวลาต่อรอบ, เวลาแต่ละ sector, ชนิดยาง, อายุยาง, สถานะแทร็ก, สภาพอากาศ และตำแหน่งกริดสตาร์ทจริง
+    ข้อมูลถูก cache ไว้บนดิสก์หลังดึงครั้งแรก (ดูโฟลเดอร์ <code>cache/</code>) เพื่อไม่ต้องยิง request ซ้ำทุกครั้งที่โหลดหน้า
+  </p>
+</section>
+
+<!-- ═══ 02 · Model ══════════════════════════════════════ -->
+<section aria-labelledby="model-h">
+  <div class="section-head">
+    <span class="section-no">02</span>
+    <h2 class="section-title" id="model-h">Model — Random Forest Regressor</h2>
+    <span class="section-note">ทำนายเวลาต่อรอบ</span>
+  </div>
+  <p class="section-sub">
+    โมเดล RandomForestRegressor train จาก lap telemetry จริงเพื่อทำนาย "เวลาต่อรอบ" จาก feature เช่น อายุยาง,
+    ชนิดยาง, จำนวนน้ำมันที่เหลือโดยประมาณ, และ stint ปัจจุบัน — validate ด้วยการเทียบเวลาที่ทำนายกับเวลาจริง
+    ของนักแข่งที่ไม่ได้อยู่ใน training set รายละเอียด hyperparameter และ feature ทั้งหมดดูได้ที่
+    <a href="{{ url_for('model_report_page') }}" style="color: var(--brand); text-decoration: underline">Model Report</a>
+  </p>
+</section>
+
+<!-- ═══ 03 · Simulation ═════════════════════════════════ -->
+<section aria-labelledby="sim-h">
+  <div class="section-head">
+    <span class="section-no">03</span>
+    <h2 class="section-title" id="sim-h">Simulation — จำลองทั้งกริด</h2>
+    <span class="section-note">Strategy Lab</span>
+  </div>
+  <p class="section-sub">
+    เมื่อกำหนดกลยุทธ์ (ยาง + รอบพิท) ระบบสร้าง feature ของทุก lap ตามกลยุทธ์นั้น ให้โมเดลทำนายเวลาแต่ละรอบ
+    บวก pace offset ที่ calibrate จากนักแข่งจริงและ pit loss ที่ประมาณจากสนามนั้น แล้วรวมเป็นเวลาทั้งการแข่งขัน —
+    ทำพร้อมกันทั้งกริดจริงของสนามที่เลือกเพื่อจัดอันดับและคำนวณ win probability
+  </p>
+</section>
+
+<!-- ═══ 04 · Optimization ═══════════════════════════════ -->
+<section aria-labelledby="opt-h">
+  <div class="section-head">
+    <span class="section-no">04</span>
+    <h2 class="section-title" id="opt-h">Optimization — ค้นหากลยุทธ์ที่เร็วกว่า</h2>
+    <span class="section-note">Strategy Analysis</span>
+  </div>
+  <p class="section-sub">
+    Grid search ไล่ชุดยาง/รอบพิทที่เป็นไปได้ทั้งหมดของสนามนั้น เทียบเวลารวมกับกลยุทธ์จริงที่นักแข่งใช้
+    แล้วจำแนกกลยุทธ์ที่เร็วกว่าเป็น undercut/overcut ตามรอบพิทเทียบ baseline รายละเอียดและคำอธิบายศัพท์
+    ดูได้ที่ <a href="{{ url_for('analysis_page') }}" style="color: var(--brand); text-decoration: underline">Strategy Analysis</a>
+  </p>
+</section>
+
+<div class="divider-flag" role="presentation"><span class="chk" aria-hidden="true"></span></div>
+
+<!-- ═══ Explore ═════════════════════════════════════════ -->
+<section aria-labelledby="explore-h">
+  <div class="section-head">
+    <span class="section-no">05</span>
+    <h2 class="section-title" id="explore-h">สำรวจต่อ</h2>
+  </div>
+  <div class="hero-actions">
+    <a class="btn" href="{{ url_for('circuits_page') }}">
+      Circuit Library
+      <svg class="btn-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+    </a>
+    <a class="btn ghost" href="{{ url_for('records_page') }}">
+      Records
+      <svg class="btn-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+    </a>
+    <a class="btn ghost" href="{{ url_for('play_strategy_page') }}">
+      Strategy Lab
+      <svg class="btn-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+    </a>
+  </div>
+</section>
+
+{% endblock %}
