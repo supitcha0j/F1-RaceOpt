@@ -217,7 +217,7 @@
       </div>
     </div>
 
-    <div class="panel">
+    <div class="panel" style="position: relative">
       <div class="panel-head">
         <h3 class="panel-title">อันดับตลอดการแข่ง</h3>
         <span class="panel-note push">รอบ <span id="replayLapNow">–</span> / {{ total_laps }}</span>
@@ -238,17 +238,37 @@
             </button>
             <button type="button" class="replay-speed" id="replaySpeed">1×</button>
             <input type="range" id="replaySlider" class="replay-slider" min="1" max="{{ total_laps }}" value="{{ total_laps }}" aria-label="เลื่อนดูอันดับรายรอบ" />
+            <button type="button" class="replay-mute" id="replayMute" aria-label="ปิดเสียง" aria-pressed="false">
+              <svg id="iconSound" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 5 6 9H2v6h4l5 4V5z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M18.5 5.5a9 9 0 0 1 0 13"/></svg>
+              <svg id="iconMuted" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" hidden><path d="M11 5 6 9H2v6h4l5 4V5z"/><path d="M23 9l-6 6M17 9l6 6"/></svg>
+            </button>
           </div>
         </div>
-        <div class="chart h-md" style="margin-top: 16px">
-          <canvas id="posChart"></canvas>
+
+        <div class="replay-grid">
+          <div class="chart h-md">
+            <canvas id="posChart"></canvas>
+          </div>
+          <div class="replay-ladder" id="replayLadder" aria-label="กระดานอันดับสด"></div>
         </div>
+
         <div class="legend" style="margin-top: 10px">
           <span><i style="background: var(--brand)"></i>คุณ</span>
           <span><i style="background: var(--fg-3)"></i>คู่แข่งใกล้เคียง</span>
         </div>
+
+        <div class="replay-feed" id="replayFeed" aria-live="polite" aria-label="เหตุการณ์ระหว่างแข่ง"></div>
+
+        <div class="replay-finish" id="replayFinish" hidden>
+          <div class="replay-finish-flag"></div>
+          <div class="replay-finish-body">
+            <p class="replay-finish-title" id="replayFinishTitle">เข้าเส้นชัย!</p>
+            <div class="replay-finish-stats" id="replayFinishStats"></div>
+          </div>
+        </div>
       </div>
       <div class="panel-foot">กด Play เพื่อย้อนดูอันดับตั้งแต่ Lap 1 หรือลากแถบเลื่อนดูรอบที่ต้องการ</div>
+      <div class="replay-confetti" id="replayConfetti"></div>
     </div>
 
     <div class="panel">
@@ -430,6 +450,176 @@
     var speedBtn  = document.getElementById("replaySpeed");
     var iconPlay  = document.getElementById("iconPlay");
     var iconPause = document.getElementById("iconPause");
+    var muteBtn   = document.getElementById("replayMute");
+    var iconSound = document.getElementById("iconSound");
+    var iconMuted = document.getElementById("iconMuted");
+    var ladderEl  = document.getElementById("replayLadder");
+    var feedEl    = document.getElementById("replayFeed");
+    var finishEl  = document.getElementById("replayFinish");
+    var finishTitleEl = document.getElementById("replayFinishTitle");
+    var finishStatsEl = document.getElementById("replayFinishStats");
+    var confettiEl = document.getElementById("replayConfetti");
+
+    var pitLaps = progress.pit_laps || [];
+
+    // ── Live standings ladder — ตำแหน่งคุณ + คู่แข่งใกล้เคียง จัดเรียงใหม่
+    // ทุกรอบด้วย FLIP animation ให้เห็นแถวสลับที่กันจริงๆ เหมือนกระดานสด
+    var ladderData = [{ code: "YOU", positions: progress.user, isUser: true }]
+      .concat(progress.rivals.map(function (r) { return { code: r.code, positions: r.positions, isUser: false }; }));
+    var rowEls = {};
+    ladderData.forEach(function (e) {
+      var row = document.createElement("div");
+      row.className = "replay-row" + (e.isUser ? " you" : "");
+      row.dataset.code = e.code;
+      row.innerHTML = '<span class="replay-row-pos"></span><span class="replay-row-code">' + e.code + "</span>";
+      ladderEl.appendChild(row);
+      rowEls[e.code] = row;
+    });
+
+    function renderLadder(lap) {
+      var withPos = ladderData.map(function (e) { return { code: e.code, pos: e.positions[lap - 1] }; });
+      withPos.sort(function (a, b) { return a.pos - b.pos; });
+
+      var first = {};
+      if (!reduceMotion) {
+        ladderData.forEach(function (e) { first[e.code] = rowEls[e.code].getBoundingClientRect().top; });
+      }
+
+      withPos.forEach(function (e) {
+        var row = rowEls[e.code];
+        row.querySelector(".replay-row-pos").textContent = "P" + e.pos;
+        ladderEl.appendChild(row);
+      });
+
+      if (!reduceMotion) {
+        withPos.forEach(function (e) {
+          var row = rowEls[e.code];
+          var delta = first[e.code] - row.getBoundingClientRect().top;
+          if (delta) {
+            row.style.transition = "none";
+            row.style.transform = "translateY(" + delta + "px)";
+            row.getBoundingClientRect();
+            requestAnimationFrame(function () {
+              row.style.transition = "";
+              row.style.transform = "";
+            });
+          }
+        });
+      }
+    }
+
+    // ── เสียงเอฟเฟกต์ — สังเคราะห์ด้วย Web Audio ล้วนๆ ไม่ต้องโหลดไฟล์เสียง
+    // เริ่มสร้าง AudioContext ตอนกด Play ครั้งแรกเท่านั้น (ต้องมาจาก user gesture)
+    var audioCtx = null, muted = false;
+    function ensureAudio() {
+      var AC = window.AudioContext || window.webkitAudioContext;
+      if (!AC) return null;
+      if (!audioCtx) audioCtx = new AC();
+      if (audioCtx.state === "suspended") audioCtx.resume();
+      return audioCtx;
+    }
+    function tone(freqStart, freqEnd, duration, type, peak) {
+      if (muted) return;
+      var ctx = ensureAudio();
+      if (!ctx) return;
+      var osc = ctx.createOscillator();
+      var gain = ctx.createGain();
+      osc.type = type;
+      var t0 = ctx.currentTime;
+      osc.frequency.setValueAtTime(freqStart, t0);
+      osc.frequency.exponentialRampToValueAtTime(Math.max(freqEnd, 1), t0 + duration);
+      gain.gain.setValueAtTime(0, t0);
+      gain.gain.linearRampToValueAtTime(peak, t0 + 0.01);
+      gain.gain.exponentialRampToValueAtTime(0.001, t0 + duration);
+      osc.connect(gain).connect(ctx.destination);
+      osc.start(t0);
+      osc.stop(t0 + duration + 0.02);
+    }
+    function playBlip() { tone(520, 900, 0.14, "triangle", 0.12); }
+    function playThud() { tone(260, 120, 0.18, "sine", 0.14); }
+    function playFanfare() {
+      [523.25, 659.25, 783.99, 1046.5].forEach(function (f, i) {
+        setTimeout(function () { tone(f, f, 0.16, "triangle", 0.12); }, i * 90);
+      });
+    }
+    muteBtn.addEventListener("click", function () {
+      muted = !muted;
+      iconSound.hidden = muted;
+      iconMuted.hidden = !muted;
+      muteBtn.classList.toggle("is-muted", muted);
+      muteBtn.setAttribute("aria-pressed", String(muted));
+      muteBtn.setAttribute("aria-label", muted ? "เปิดเสียง" : "ปิดเสียง");
+    });
+
+    // ── ช่องคอมเมนต์สด ───────────────────────────────
+    function addFeed(html, kind) {
+      var el = document.createElement("div");
+      el.className = "replay-feed-line" + (kind ? " " + kind : "");
+      el.innerHTML = html;
+      feedEl.insertBefore(el, feedEl.firstChild);
+      feedEl.scrollTop = 0;
+      while (feedEl.children.length > 40) feedEl.removeChild(feedEl.lastChild);
+    }
+
+    function narrate(lap) {
+      var pos = progress.user[lap - 1];
+      if (lap === 1) { addFeed("🏁 ออกตัว! คุณอยู่ <b>P" + pos + "</b>"); return; }
+      var prevPos = progress.user[lap - 2];
+      if (pitLaps.indexOf(lap) !== -1) { addFeed("🔧 LAP " + lap + " — เข้าพิทเปลี่ยนยาง"); return; }
+      if (pos === prevPos) return;
+      var delta = prevPos - pos;
+      if (delta > 0) {
+        playBlip();
+        addFeed((delta >= 3 ? "🔥 LAP " + lap + " — แซงรวด " + delta + " อันดับ! ขึ้น " : "⚡ LAP " + lap + " — แซงขึ้น ") + "<b>P" + pos + "</b>", "hot");
+      } else {
+        playThud();
+        addFeed("📉 LAP " + lap + " — ตกไป <b>P" + pos + "</b>", "cold");
+      }
+    }
+
+    // ── ฉากเข้าเส้นชัย ────────────────────────────────
+    function statBlock(k, v) {
+      return '<div><p class="replay-finish-stat-k">' + k + '</p><p class="replay-finish-stat-v">' + v + "</p></div>";
+    }
+    function computeStats() {
+      var arr = progress.user, bestGain = 0, bestGainLap = 1, overtakes = 0, longestHold = 1, holdPos = arr[0], curLen = 1;
+      for (var i = 1; i < arr.length; i++) {
+        var d = arr[i - 1] - arr[i];
+        if (d > 0) { overtakes++; if (d > bestGain) { bestGain = d; bestGainLap = i + 1; } }
+        curLen = arr[i] === arr[i - 1] ? curLen + 1 : 1;
+        if (curLen > longestHold) { longestHold = curLen; holdPos = arr[i]; }
+      }
+      return { bestGain: bestGain, bestGainLap: bestGainLap, overtakes: overtakes, longestHold: longestHold, holdPos: holdPos };
+    }
+    function spawnConfetti() {
+      var colors = ["#E0143C", "#FFB020", "#B4FF39", "#E4E8F0"];
+      for (var i = 0; i < 28; i++) {
+        var piece = document.createElement("span");
+        piece.className = "confetti-piece";
+        piece.style.left = (Math.random() * 100) + "%";
+        piece.style.background = colors[Math.floor(Math.random() * colors.length)];
+        piece.style.animationDuration = (0.9 + Math.random() * 0.6) + "s";
+        piece.style.animationDelay = (Math.random() * 0.3) + "s";
+        confettiEl.appendChild(piece);
+        (function (p) { setTimeout(function () { p.remove(); }, 2000); })(piece);
+      }
+    }
+    function narrateFinish() {
+      var finalPos = progress.user[totalLaps - 1];
+      playFanfare();
+      var podium = finalPos <= 3;
+      addFeed((podium ? "🏆 เข้าเส้นชัย! ขึ้นโพเดียม " : "🏁 เข้าเส้นชัย อันดับ ") + "<b>P" + finalPos + "</b>", "hot");
+
+      var stats = computeStats();
+      finishTitleEl.textContent = podium ? "🏆 ขึ้นโพเดียม! อันดับ P" + finalPos : "🏁 เข้าเส้นชัย อันดับ P" + finalPos;
+      finishTitleEl.classList.toggle("podium", podium);
+      finishStatsEl.innerHTML =
+        statBlock("แซงดีที่สุด", stats.bestGain > 0 ? "+" + stats.bestGain + " อันดับ (Lap " + stats.bestGainLap + ")" : "—") +
+        statBlock("แซงทั้งหมด", stats.overtakes + " ครั้ง") +
+        statBlock("อยู่นานสุด", "P" + stats.holdPos + " · " + stats.longestHold + " รอบ");
+      finishEl.hidden = false;
+      if (podium && !reduceMotion) spawnConfetti();
+    }
 
     var BASE_INTERVAL = 220; // ms ต่อรอบ ที่ความเร็ว 1×
     var speeds = [1, 2, 4];
@@ -449,6 +639,7 @@
       chart.data.datasets = rivalDatasets.concat([userDataset]);
       chart.$replayLap = lap;
       chart.update(reduceMotion ? "none" : undefined);
+      renderLadder(lap);
 
       var pos = progress.user[lap - 1];
       var prevPos = lap > 1 ? progress.user[lap - 2] : pos;
@@ -478,11 +669,19 @@
 
     function tick() {
       if (currentLap >= totalLaps) { stop(); return; }
-      render(currentLap + 1);
+      var next = currentLap + 1;
+      render(next);
+      narrate(next);
+      if (next === totalLaps) { narrateFinish(); stop(); }
     }
 
     function play() {
-      if (currentLap >= totalLaps) render(1);
+      if (currentLap >= totalLaps) {
+        feedEl.innerHTML = "";
+        finishEl.hidden = true;
+        render(1);
+        narrate(1);
+      }
       iconPlay.hidden = true;
       iconPause.hidden = false;
       playBtn.setAttribute("aria-label", "หยุดชั่วคราว");

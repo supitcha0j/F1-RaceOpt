@@ -528,15 +528,17 @@ def play_strategy_page():
         } for r in combined]
 
         # อันดับของคุณในทุกๆ รอบ (ไม่ใช่แค่ผลสุดท้าย) — สำหรับกราฟ position replay
-        # แสดงเฉพาะคู่แข่งที่จบใกล้อันดับคุณ (±2) ให้เห็นบริบทว่าไล่แซงใครระหว่างทาง
+        # แสดงเฉพาะคู่แข่งที่จบใกล้อันดับคุณ (±4) ให้เห็นบริบทว่าไล่แซงใครระหว่างทาง
+        # และมีแถวพอสำหรับกระดานอันดับสด (live ladder)
         lap_positions = compute_lap_positions(combined, total_laps)
         idx = user_rank - 1
-        context_codes = [r.code for r in combined[max(0, idx - 2):idx + 3] if r.code != "YOU"]
+        context_codes = [r.code for r in combined[max(0, idx - 4):idx + 5] if r.code != "YOU"]
         lap_progress = {
             "labels": list(range(1, total_laps + 1)),
             "field_size": len(combined),
             "user": lap_positions["YOU"],
             "rivals": [{"code": c, "positions": lap_positions[c]} for c in context_codes],
+            "pit_laps": [l for l in (pit_lap, second_pit_lap) if l],
         }
 
     return render_template(
