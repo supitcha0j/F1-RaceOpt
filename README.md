@@ -1,41 +1,34 @@
-# F1 Race Strategy AI (Forked Project)
+# RaceOpt
 
-## 📌 About This Project
+RaceOpt analyzes and simulates Formula 1 race strategy from real lap telemetry. It predicts lap times with a `RandomForestRegressor` trained on [FastF1](https://github.com/theOehrly/Fast-F1) data, then uses that model to grid-search for faster pit strategies and to simulate full-grid races for user-defined strategies.
 
-This repository is a fork of the original project:
+## Features
 
-👉 https://github.com/Tawnon/F1-RaceOpt-AI-Strategy
+- **Strategy Analysis** — pick a real race/driver combo; the model calibrates against real lap times, grid-searches tyre/pit-lap combinations, and classifies the results as undercut/overcut
+- **Strategy Lab** — build your own tyre strategy and simulate it against the full real grid, with an animated lap-by-lap position replay
+- **Drivers / Teams** — rosters for the current season with real photos, team colors, and car numbers (sourced from OpenF1 and Wikimedia Commons)
+- **Model Report** — validation numbers (MAE/RMSE, real vs. simulated) computed live from cached telemetry, not hardcoded
 
-The original project focuses on AI-based optimization for Formula 1 race strategies.
+## Running locally
 
----
+```bash
+pip install -r requirements.txt
+python app.py
+```
 
-## 🚀 Purpose
+`model.pkl` and the `cache/` directory are committed to the repo, so the app works out of the box on a fresh clone with no network access — every page can be exercised from cached data alone.
 
-This fork is used for:
+To retrain the model or refresh driver/circuit media:
 
-* Learning and understanding the original system
-* Experimenting with modifications
-* Extending features and improving the project
+```bash
+python train_model_advanced.py    # retrain model.pkl
+python fetch_media.py             # refresh driver photos, circuit photos, team data
+```
 
----
+## Deploying
 
-## 🔧 My Changes
+A `Dockerfile` and `render.yaml` are included for deploying with [Render](https://render.com) (Blueprint) or [Railway](https://railway.app) (auto-detects the Dockerfile). See `CLAUDE.md` for details.
 
-* Modified code structure
-* Improved or added features (if any)
-* Experimented with different approaches
+## Tech stack
 
----
-
-## 🙏 Credits
-
-All credit for the original project goes to the original author:
-
-👉 https://github.com/Tawnon/F1-RaceOpt-AI-Strategy
-
----
-
-## ⚠️ Note
-
-This project is forked for educational and personal development purposes.
+Flask · scikit-learn · pandas/numpy · FastF1 · Chart.js
