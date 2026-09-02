@@ -116,7 +116,7 @@
       .skip:focus { left: 8px; top: 8px; }
 
       /* ── Chrome: top line + nav ────────────────── */
-      .topline { height: 2px; background: var(--brand); }
+      /* .topline base styles moved to animation section below */
 
       .nav {
         position: sticky;
@@ -702,17 +702,41 @@
         object-fit: cover;
         object-position: 60% 42%;
         display: block;
+        animation: heroZoom 20s ease-in-out infinite alternate;
+      }
+      @keyframes heroZoom {
+        0%   { transform: scale(1) translate(0, 0); }
+        100% { transform: scale(1.08) translate(-1%, -1%); }
       }
       .hero-media::after {
         content: "";
         position: absolute;
         inset: 0;
-        /* Bottom-anchored scrim: photo reads clean up top, copy sits in a
-           near-solid pool at the bottom-left — same logic real motorsport
-           hero photography uses instead of faking a cutout around the car. */
         background:
           linear-gradient(185deg, rgba(7, 9, 17, 0.05) 0%, rgba(7, 9, 17, 0.32) 46%, rgba(7, 9, 17, 0.93) 82%, var(--bg-sunk) 100%),
           linear-gradient(100deg, rgba(7, 9, 17, 0.9) 0%, rgba(7, 9, 17, 0.52) 34%, rgba(7, 9, 17, 0) 60%);
+      }
+      /* Animated neon glow border on hero */
+      .hero::before {
+        content: "";
+        position: absolute;
+        inset: -2px;
+        z-index: 2;
+        border-radius: var(--r);
+        background: linear-gradient(90deg, var(--brand), var(--amber), var(--brand-hi), var(--brand));
+        background-size: 300% 100%;
+        animation: borderGlow 4s linear infinite;
+        mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+        -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+        mask-composite: exclude;
+        -webkit-mask-composite: xor;
+        padding: 1px;
+        pointer-events: none;
+        opacity: 0.6;
+      }
+      @keyframes borderGlow {
+        0%   { background-position: 0% 50%; }
+        100% { background-position: 300% 50%; }
       }
       .hero-content {
         position: relative;
@@ -730,6 +754,7 @@
         position: relative;
         color: var(--brand);
         white-space: nowrap;
+        text-shadow: 0 0 30px rgba(224, 20, 60, 0.4), 0 0 60px rgba(224, 20, 60, 0.15);
       }
       .hero-bar {
         display: inline-block;
@@ -738,9 +763,273 @@
         background: var(--brand);
         transform: skewX(-25deg);
         margin-bottom: 14px;
+        box-shadow: 0 0 12px rgba(224, 20, 60, 0.6), 0 0 30px rgba(224, 20, 60, 0.2);
       }
       .hero-lede { margin-top: 14px; max-width: 56ch; color: var(--fg-2); font-size: 14.5px; }
       .hero-actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 24px; }
+
+      /* ── Floating particles system ────────────────── */
+      .particles {
+        position: absolute;
+        inset: 0;
+        z-index: 1;
+        pointer-events: none;
+        overflow: hidden;
+      }
+      .particle {
+        position: absolute;
+        width: 2px;
+        height: 2px;
+        background: var(--brand);
+        border-radius: 50%;
+        box-shadow: 0 0 6px rgba(224, 20, 60, 0.6), 0 0 12px rgba(224, 20, 60, 0.3);
+        animation: particleFloat linear infinite;
+      }
+      .particle:nth-child(2n) { background: var(--amber); box-shadow: 0 0 6px rgba(255, 176, 32, 0.5); }
+      .particle:nth-child(3n) { background: var(--lime); box-shadow: 0 0 6px rgba(180, 255, 57, 0.4); width: 1px; height: 1px; }
+      @keyframes particleFloat {
+        0%   { transform: translate(0, 0) scale(1); opacity: 0; }
+        10%  { opacity: 1; }
+        90%  { opacity: 1; }
+        100% { transform: translate(var(--px, 60px), var(--py, -120px)) scale(0); opacity: 0; }
+      }
+
+      /* ── 3D perspective card transforms ───────────── */
+      .card-3d {
+        perspective: 800px;
+        transform-style: preserve-3d;
+      }
+      .card-3d > .panel {
+        transition: transform 0.4s var(--ease-out), box-shadow 0.4s var(--ease-out);
+        transform: rotateX(0) rotateY(0);
+        will-change: transform;
+      }
+      .card-3d:hover > .panel {
+        transform: rotateX(-2deg) rotateY(3deg) translateZ(8px);
+        box-shadow: -6px 8px 24px rgba(0, 0, 0, 0.35), 0 0 1px rgba(224, 20, 60, 0.2);
+      }
+
+      /* ── Driver avatar (real headshot, OpenF1) ────── */
+      .avatar {
+        width: 26px;
+        height: 26px;
+        border-radius: 50%;
+        object-fit: cover;
+        object-position: top center;
+        border: 1px solid var(--line-2);
+        background: var(--surface-2);
+        flex: 0 0 auto;
+        vertical-align: middle;
+      }
+      .avatar-lg { width: 52px; height: 52px; }
+      .avatar-row { display: inline-flex; align-items: center; gap: 8px; }
+
+      /* ── Circuit card thumbnail (real photo, Wikimedia Commons) ── */
+      .card-media {
+        position: relative;
+        height: 116px;
+        overflow: hidden;
+        border-bottom: 1px solid var(--line);
+      }
+      .card-media img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+        transition: transform 0.5s var(--ease-out);
+      }
+      .card-media::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(180deg, rgba(7, 9, 17, 0) 55%, rgba(7, 9, 17, 0.55) 100%);
+      }
+      .hoverable:hover .card-media img { transform: scale(1.06); }
+
+      /* ── Section with 3D image background ─────────── */
+      .section-visual {
+        position: relative;
+        overflow: hidden;
+        border-radius: var(--r);
+        margin-top: 28px;
+      }
+      .section-visual-bg {
+        position: absolute;
+        inset: 0;
+        z-index: 0;
+      }
+      .section-visual-bg img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+        opacity: 0.25;
+        filter: blur(1px) saturate(1.3);
+        transition: transform 0.6s var(--ease-out), opacity 0.6s ease;
+      }
+      .section-visual:hover .section-visual-bg img {
+        transform: scale(1.04);
+        opacity: 0.35;
+      }
+      .section-visual-content {
+        position: relative;
+        z-index: 1;
+        padding: clamp(20px, 3vw, 36px);
+        background: linear-gradient(135deg, rgba(18, 23, 34, 0.92), rgba(11, 14, 19, 0.96));
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+      }
+
+      /* ── 3D rotating tyre widget ──────────────────── */
+      .tyre-3d-container {
+        perspective: 600px;
+        display: flex;
+        justify-content: center;
+        gap: 24px;
+        padding: 20px 0;
+      }
+      .tyre-3d {
+        width: 64px;
+        height: 64px;
+        border-radius: 50%;
+        border: 4px solid;
+        position: relative;
+        animation: tyreRotate3d 3s ease-in-out infinite;
+        transform-style: preserve-3d;
+      }
+      .tyre-3d::before {
+        content: "";
+        position: absolute;
+        inset: 6px;
+        border-radius: 50%;
+        border: 2px dashed;
+        border-color: inherit;
+        opacity: 0.4;
+      }
+      .tyre-3d::after {
+        content: attr(data-label);
+        position: absolute;
+        bottom: -22px;
+        left: 50%;
+        transform: translateX(-50%);
+        font: 600 9px/1 var(--mono);
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        white-space: nowrap;
+        color: inherit;
+      }
+      .tyre-3d.tyre-soft   { border-color: var(--soft); color: var(--soft); animation-delay: 0s; }
+      .tyre-3d.tyre-medium { border-color: var(--medium); color: var(--medium); animation-delay: 0.3s; }
+      .tyre-3d.tyre-hard   { border-color: var(--hard); color: var(--hard); animation-delay: 0.6s; }
+      @keyframes tyreRotate3d {
+        0%   { transform: rotateY(0deg) rotateX(15deg); }
+        50%  { transform: rotateY(180deg) rotateX(-5deg); }
+        100% { transform: rotateY(360deg) rotateX(15deg); }
+      }
+
+      /* ── Speed lines animation (background decoration) ── */
+      .speed-lines {
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        overflow: hidden;
+        z-index: 0;
+      }
+      .speed-line {
+        position: absolute;
+        height: 1px;
+        background: linear-gradient(90deg, transparent, rgba(224, 20, 60, 0.3), transparent);
+        animation: speedLine 2s linear infinite;
+      }
+      @keyframes speedLine {
+        0%   { transform: translateX(-100%); opacity: 0; }
+        20%  { opacity: 1; }
+        80%  { opacity: 1; }
+        100% { transform: translateX(calc(100vw + 100%)); opacity: 0; }
+      }
+
+      /* ── Glassmorphism panel variant ──────────────── */
+      .panel.glass {
+        background: rgba(18, 23, 34, 0.7);
+        backdrop-filter: blur(16px) saturate(1.4);
+        -webkit-backdrop-filter: blur(16px) saturate(1.4);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+      }
+      .panel.glass:hover {
+        border-color: rgba(224, 20, 60, 0.2);
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(224, 20, 60, 0.1);
+      }
+
+      /* ── Shimmer / loading glow effect ────────────── */
+      .shimmer {
+        position: relative;
+        overflow: hidden;
+      }
+      .shimmer::after {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 60%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(224, 20, 60, 0.06), transparent);
+        animation: shimmerSlide 3s ease-in-out infinite;
+        pointer-events: none;
+      }
+      @keyframes shimmerSlide {
+        0%   { left: -60%; }
+        100% { left: 160%; }
+      }
+
+      /* ── Animated gradient text ───────────────────── */
+      .gradient-text {
+        background: linear-gradient(90deg, var(--brand), var(--amber), var(--brand-hi), var(--brand));
+        background-size: 300% auto;
+        -webkit-background-clip: text;
+        background-clip: text;
+        -webkit-text-fill-color: transparent;
+        animation: gradientShift 4s ease-in-out infinite;
+      }
+      @keyframes gradientShift {
+        0%, 100% { background-position: 0% center; }
+        50%      { background-position: 100% center; }
+      }
+
+      /* ── Reveal on scroll animation ──────────────── */
+      .reveal {
+        opacity: 0;
+        transform: translateY(24px);
+        transition: opacity 0.6s var(--ease-out), transform 0.6s var(--ease-out);
+      }
+      .reveal.revealed {
+        opacity: 1;
+        transform: translateY(0);
+      }
+      .reveal-delay-1 { transition-delay: 0.1s; }
+      .reveal-delay-2 { transition-delay: 0.2s; }
+      .reveal-delay-3 { transition-delay: 0.3s; }
+
+      /* ── Neon glow on hover for metrics ─────────── */
+      .metric {
+        transition: background 0.3s ease, box-shadow 0.3s ease;
+      }
+      .metric:hover {
+        background: rgba(224, 20, 60, 0.04);
+        box-shadow: inset 0 -2px 0 var(--brand);
+      }
+
+      /* ── Animated topline ───────────────────────── */
+      .topline {
+        height: 2px;
+        background: linear-gradient(90deg, var(--brand) 0%, var(--amber) 30%, var(--brand-hi) 60%, var(--brand) 100%);
+        background-size: 200% 100%;
+        animation: toplineSlide 3s linear infinite;
+      }
+      @keyframes toplineSlide {
+        0%   { background-position: 0% 0%; }
+        100% { background-position: 200% 0%; }
+      }
 
       /* ── Motion: fast, transform-only, capped stagger ─────────
          Killed globally by the prefers-reduced-motion rule above. */
@@ -1028,10 +1317,10 @@
              {% if request.endpoint == 'analysis_page' %}aria-current="page"{% endif %}>Strategy Analysis</a>
           <a class="tab" href="{{ url_for('play_strategy_page') }}"
              {% if request.endpoint == 'play_strategy_page' %}aria-current="page"{% endif %}>Strategy Lab</a>
-          <a class="tab" href="{{ url_for('circuits_page') }}"
-             {% if request.endpoint == 'circuits_page' %}aria-current="page"{% endif %}>Circuit Library</a>
-          <a class="tab" href="{{ url_for('records_page') }}"
-             {% if request.endpoint == 'records_page' %}aria-current="page"{% endif %}>Records</a>
+          <a class="tab" href="{{ url_for('drivers_page') }}"
+             {% if request.endpoint == 'drivers_page' %}aria-current="page"{% endif %}>Drivers</a>
+          <a class="tab" href="{{ url_for('teams_page') }}"
+             {% if request.endpoint == 'teams_page' %}aria-current="page"{% endif %}>Teams</a>
           <a class="tab" href="{{ url_for('model_report_page') }}"
              {% if request.endpoint == 'model_report_page' %}aria-current="page"{% endif %}>Model Report</a>
         </div>
@@ -1084,6 +1373,65 @@
         }
         document.addEventListener("DOMContentLoaded", function () {
           document.querySelectorAll("[data-countup]").forEach(countUp);
+        });
+      })();
+
+      /* ── Scroll reveal observer ─────────────────────── */
+      (function () {
+        if (window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches) {
+          document.querySelectorAll(".reveal").forEach(function (el) { el.classList.add("revealed"); });
+          return;
+        }
+        var obs = new IntersectionObserver(function (entries) {
+          entries.forEach(function (e) {
+            if (e.isIntersecting) {
+              e.target.classList.add("revealed");
+              obs.unobserve(e.target);
+            }
+          });
+        }, { threshold: 0.12 });
+        document.addEventListener("DOMContentLoaded", function () {
+          document.querySelectorAll(".reveal").forEach(function (el) { obs.observe(el); });
+        });
+      })();
+
+      /* ── Particle system for hero ──────────────────── */
+      (function () {
+        if (window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+        document.addEventListener("DOMContentLoaded", function () {
+          var container = document.querySelector(".particles");
+          if (!container) return;
+          for (var i = 0; i < 18; i++) {
+            var p = document.createElement("span");
+            p.className = "particle";
+            p.style.left = Math.random() * 100 + "%";
+            p.style.top = 50 + Math.random() * 50 + "%";
+            p.style.setProperty("--px", (Math.random() - 0.5) * 160 + "px");
+            p.style.setProperty("--py", -(40 + Math.random() * 120) + "px");
+            p.style.animationDuration = 3 + Math.random() * 5 + "s";
+            p.style.animationDelay = Math.random() * 6 + "s";
+            container.appendChild(p);
+          }
+        });
+      })();
+
+      /* ── 3D tilt effect on card-3d elements ─────────── */
+      (function () {
+        if (window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+        document.addEventListener("DOMContentLoaded", function () {
+          document.querySelectorAll(".card-3d").forEach(function (card) {
+            var panel = card.querySelector(".panel");
+            if (!panel) return;
+            card.addEventListener("mousemove", function (e) {
+              var rect = card.getBoundingClientRect();
+              var x = (e.clientX - rect.left) / rect.width - 0.5;
+              var y = (e.clientY - rect.top) / rect.height - 0.5;
+              panel.style.transform = "rotateY(" + (x * 8) + "deg) rotateX(" + (-y * 6) + "deg) translateZ(6px)";
+            });
+            card.addEventListener("mouseleave", function () {
+              panel.style.transform = "rotateX(0) rotateY(0) translateZ(0)";
+            });
+          });
         });
       })();
     </script>

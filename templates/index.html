@@ -41,14 +41,24 @@
 <section class="hero hero-photo" aria-label="ภาพรวมสนามล่าสุด">
   <div class="hero-media">
     <img src="{{ url_for('static', filename='img/hero-car.jpg') }}" alt=""
-         width="1200" height="810" loading="eager" decoding="async" />
+         width="1400" height="900" loading="eager" decoding="async" />
+  </div>
+  <!-- Floating particle sparks -->
+  <div class="particles" aria-hidden="true"></div>
+  <!-- Animated speed lines -->
+  <div class="speed-lines" aria-hidden="true">
+    <span class="speed-line" style="top:18%; width:120px; animation-delay:0s; animation-duration:1.8s;"></span>
+    <span class="speed-line" style="top:32%; width:200px; animation-delay:0.6s; animation-duration:2.2s;"></span>
+    <span class="speed-line" style="top:55%; width:160px; animation-delay:1.2s; animation-duration:1.5s;"></span>
+    <span class="speed-line" style="top:71%; width:90px; animation-delay:0.3s; animation-duration:2.8s;"></span>
+    <span class="speed-line" style="top:85%; width:140px; animation-delay:1.8s; animation-duration:2s;"></span>
   </div>
   <div class="hero-content">
     <span class="hero-bar" aria-hidden="true"></span>
     <p class="eyebrow">{% if analysis %}Latest analysed race{% else %}Race strategy overview{% endif %}</p>
     <h1 class="hero-headline">
-      {% if analysis %}{{ analysis.result.race_label }} — <span class="hl">strategy read</span>
-      {% else %}Race strategy, <span class="hl">read from telemetry</span>{% endif %}
+      {% if analysis %}{{ analysis.result.race_label }} — <span class="hl gradient-text">strategy read</span>
+      {% else %}Race strategy, <span class="hl gradient-text">read from telemetry</span>{% endif %}
     </h1>
     <p class="hero-lede">
       {% if analysis %}
@@ -60,7 +70,7 @@
     </p>
 
     {% if analysis %}
-    <div class="metrics cols-4" style="margin-top: 24px">
+    <div class="metrics cols-4 shimmer" style="margin-top: 24px">
       <div class="metric">
         <span class="metric-k">Real race time</span>
         <span class="metric-v accent">{{ analysis.result.real_time }}</span>
@@ -112,16 +122,21 @@
 {% if analysis %}
 
 <!-- ═══ 02 · Race Strategy Snapshot ═════════════════════════ -->
-<section aria-labelledby="snap-h">
+<section aria-labelledby="snap-h" class="section-visual reveal">
+  {% set snap_circuit_photo = circuit_photo(race_key) %}
+  <div class="section-visual-bg" aria-hidden="true">
+    <img src="{{ url_for('static', filename=snap_circuit_photo) if snap_circuit_photo else 'https://images.unsplash.com/photo-1504707748692-419802cf939d?w=1200&h=600&fit=crop&q=70' }}" alt="" />
+  </div>
+  <div class="section-visual-content">
   <div class="section-head">
     <span class="section-no">02</span>
     <h2 class="section-title" id="snap-h">Race Strategy Snapshot</h2>
     <span class="section-note">{{ analysis.result.driver }} · {{ analysis.result.race_label }}</span>
   </div>
 
-  <div class="specbar">
+  <div class="specbar shimmer">
     <div class="spec"><span class="spec-k">Circuit</span><span class="spec-v">{{ analysis.result.race_label }}</span></div>
-    <div class="spec"><span class="spec-k">Driver</span><span class="spec-v">{{ analysis.result.driver }}</span></div>
+    <div class="spec"><span class="spec-k">Driver</span><span class="spec-v avatar-row">{% set dph = driver_photo(analysis.result.driver) %}{% if dph %}<img class="avatar" src="{{ url_for('static', filename=dph) }}" alt="" />{% endif %}{{ analysis.result.driver }}</span></div>
     <div class="spec"><span class="spec-k">Grid</span><span class="spec-v">P{{ analysis.result.grid_position }}</span></div>
     <div class="spec"><span class="spec-k">Stops (real)</span><span class="spec-v">{{ analysis.result.stints|length - 1 }}</span></div>
     <div class="spec"><span class="spec-k">Pit loss (est.)</span><span class="spec-v">{{ "%.1f"|format(analysis.result.pit_loss) }}s</span></div>
@@ -134,7 +149,8 @@
   </div>
 
   {% if analysis.top_faster %}
-  <div class="panel accent" style="margin-top: 14px">
+  <div class="card-3d" style="margin-top: 14px">
+  <div class="panel accent glass">
     <div class="panel-body">
       <div class="split">
         <div>
@@ -158,22 +174,25 @@
       </div>
     </div>
   </div>
+  </div>
   {% endif %}
   <p class="section-sub" style="margin-top: 10px">
     รายละเอียดกลยุทธ์ทางเลือกทั้งหมดและ parameter ที่ปรับได้ ดูต่อที่
     <a href="{{ url_for('analysis_page') }}" style="color: var(--brand); text-decoration: underline">Strategy Analysis</a>
   </p>
+  </div>
 </section>
 
 <!-- ═══ 03 · Interactive lap & pit-stop timeline ═══════════ -->
-<section aria-labelledby="timeline-h">
+<section aria-labelledby="timeline-h" class="reveal reveal-delay-1">
   <div class="section-head">
     <span class="section-no">03</span>
     <h2 class="section-title" id="timeline-h">Interactive Lap &amp; Pit-stop Timeline</h2>
     <span class="section-note">{{ analysis.result.total_laps }} laps</span>
   </div>
 
-  <div class="panel">
+  <div class="card-3d">
+  <div class="panel glass">
     <div class="panel-head">
       <h3 class="panel-title">Lap time · จริง vs โมเดลทำนาย</h3>
       <span class="panel-note push">{{ analysis.result.driver }}</span>
@@ -205,7 +224,7 @@
     <div class="panel-body">
       <div class="vs">
         <div>
-          <p class="eyebrow muted">{{ compare.a.driver }}</p>
+          <p class="eyebrow muted avatar-row">{% set dph = driver_photo(compare.a.driver) %}{% if dph %}<img class="avatar" src="{{ url_for('static', filename=dph) }}" alt="" />{% endif %}{{ compare.a.driver }}</p>
           <div class="row" style="margin-top: 6px; gap: 18px">
             <span class="rank-big">P{{ compare.a.finish_position or '—' }}</span>
             <span class="kv">Grid <b>P{{ compare.a.grid_position or '—' }}</b></span>
@@ -221,7 +240,7 @@
         <div class="vs-mid" aria-hidden="true">VS</div>
 
         <div>
-          <p class="eyebrow muted">{{ compare.b.driver }}</p>
+          <p class="eyebrow muted avatar-row">{% set dph = driver_photo(compare.b.driver) %}{% if dph %}<img class="avatar" src="{{ url_for('static', filename=dph) }}" alt="" />{% endif %}{{ compare.b.driver }}</p>
           <div class="row" style="margin-top: 6px; gap: 18px">
             <span class="rank-big">P{{ compare.b.finish_position or '—' }}</span>
             <span class="kv">Grid <b>P{{ compare.b.grid_position or '—' }}</b></span>
@@ -241,12 +260,24 @@
 {% endif %}
 
 <!-- ═══ 05 · Tyre degradation & stint analysis ══════════════ -->
-<section aria-labelledby="deg-h">
+<section aria-labelledby="deg-h" class="section-visual reveal reveal-delay-1">
+  <div class="section-visual-bg" aria-hidden="true">
+    <img src="{{ url_for('static', filename=snap_circuit_photo) if snap_circuit_photo else 'https://images.unsplash.com/photo-1558618666-fcd25c85f82e?w=1200&h=600&fit=crop&q=70' }}" alt="" />
+  </div>
+  <div class="section-visual-content">
   <div class="section-head">
     <span class="section-no">05</span>
     <h2 class="section-title" id="deg-h">Tyre Degradation &amp; Stint Analysis</h2>
     <span class="section-note">{{ analysis.result.driver }} · {{ analysis.result.stints|length }} stints</span>
   </div>
+
+  <!-- 3D Rotating Tyre Widget -->
+  <div class="tyre-3d-container" aria-hidden="true">
+    <div class="tyre-3d tyre-soft" data-label="Soft"></div>
+    <div class="tyre-3d tyre-medium" data-label="Medium"></div>
+    <div class="tyre-3d tyre-hard" data-label="Hard"></div>
+  </div>
+
   <p class="section-sub">
     Degradation rate หาจาก linear fit ของเวลาต่อรอบเทียบอายุยาง (ตัด out/in-lap ออก) — ยิ่งค่าเป็นบวกมาก ยางยิ่งเสื่อมเร็ว
   </p>
@@ -279,6 +310,7 @@
       </table>
     </div>
     <div class="panel-foot">n/a = stint สั้นเกินไปที่จะประมาณ degradation ได้อย่างน่าเชื่อถือ</div>
+  </div>
   </div>
 </section>
 
@@ -322,14 +354,19 @@
 {% endif %}
 
 <!-- ═══ 07 · Strategy Lab ═══════════════════════════════════ -->
-<section aria-labelledby="lab-h">
+<section aria-labelledby="lab-h" class="section-visual reveal">
+  <div class="section-visual-bg" aria-hidden="true">
+    <img src="https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=1200&h=600&fit=crop&q=70" alt="" />
+  </div>
+  <div class="section-visual-content">
   <div class="section-head">
     <span class="section-no">07</span>
-    <h2 class="section-title" id="lab-h">Strategy Lab</h2>
+    <h2 class="section-title" id="lab-h"><span class="gradient-text">Strategy Lab</span></h2>
     <span class="section-note">จำลองกลยุทธ์ของคุณเอง</span>
   </div>
 
-  <div class="panel accent">
+  <div class="card-3d">
+  <div class="panel accent glass">
     <div class="panel-body">
       <div class="split">
         <div>

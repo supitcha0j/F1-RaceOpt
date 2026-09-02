@@ -98,7 +98,7 @@
 <section>
   <div class="specbar">
     <div class="spec"><span class="spec-k">Circuit</span><span class="spec-v">{{ result.race_label }}</span></div>
-    <div class="spec"><span class="spec-k">Driver</span><span class="spec-v">{{ result.driver }}</span></div>
+    <div class="spec"><span class="spec-k">Driver</span><span class="spec-v avatar-row">{% set dph = driver_photo(result.driver) %}{% if dph %}<img class="avatar" src="{{ url_for('static', filename=dph) }}" alt="" />{% endif %}{{ result.driver }}</span></div>
     <div class="spec"><span class="spec-k">Grid</span><span class="spec-v">P{{ result.grid_position }}</span></div>
     <div class="spec"><span class="spec-k">Distance</span><span class="spec-v">{{ result.total_laps }} laps</span></div>
     <div class="spec"><span class="spec-k">Real race time</span><span class="spec-v">{{ result.real_time }}</span></div>

@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block title %}{{ team.team_name }} · RaceOpt{% endblock %}
+
+{% block content %}
+
+<a href="{{ url_for('teams_page') }}" class="eyebrow" style="text-decoration: none">← Teams</a>
+
+<header class="page-head" style="margin-top: 10px">
+  <div class="row" style="align-items: center; gap: 10px">
+    <span aria-hidden="true" style="width: 14px; height: 14px; border-radius: 50%; background: #{{ team.team_colour }}; flex: 0 0 auto"></span>
+    <h1 class="page-title" style="margin-top: 0">{{ team.team_name }}</h1>
+  </div>
+  <p class="lede" style="margin-top: 4px">{{ team.drivers|length }} นักแข่งประจำทีมฤดูกาลนี้</p>
+</header>
+
+<section aria-labelledby="drivers-h" style="margin-top: 28px">
+  <div class="section-head">
+    <span class="section-no">01</span>
+    <h2 class="section-title" id="drivers-h">นักแข่งในทีม</h2>
+    <span class="section-note">{{ team.drivers|length }} คน</span>
+  </div>
+
+  <div class="card-grid">
+    {% for d in team.drivers %}
+    <a class="panel accent hoverable card-link race-in"
+       style="animation-delay: {{ (loop.index0 if loop.index0 < 12 else 12) * 0.03 }}s; border-left-color: #{{ team.team_colour }}"
+       href="{{ url_for('driver_detail_page', code=d.code) }}">
+      <div class="panel-body">
+        <div class="avatar-row" style="gap: 12px; align-items: flex-start">
+          {% set dph = driver_photo(d.code) %}
+          {% if dph %}<img class="avatar avatar-lg" src="{{ url_for('static', filename=dph) }}" alt="" />{% endif %}
+          <div>
+            <h3 class="panel-title">{{ d.full_name }}</h3>
+            <span class="panel-note">{{ d.code }} · #{{ d.driver_number }}</span>
+          </div>
+        </div>
+      </div>
+      <div class="panel-foot">ดูข้อมูลนักแข่ง →</div>
+    </a>
+    {% endfor %}
+  </div>
+</section>
+
+{% endblock %}

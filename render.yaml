@@ -1,0 +1,7 @@
+services:
+  - type: web
+    name: raceopt
+    env: docker
+    dockerfilePath: ./Dockerfile
+    plan: free
+    healthCheckPath: /

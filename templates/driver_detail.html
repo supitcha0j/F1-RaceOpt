@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% block title %}{{ driver.full_name }} · RaceOpt{% endblock %}
+
+{% block content %}
+
+<a href="{{ url_for('drivers_page') }}" class="eyebrow" style="text-decoration: none">← Drivers</a>
+
+<header class="page-head" style="margin-top: 10px">
+  <div class="avatar-row" style="gap: 16px; align-items: center">
+    {% set dph = driver_photo(driver.code) %}
+    {% if dph %}<img class="avatar" style="width: 84px; height: 84px" src="{{ url_for('static', filename=dph) }}" alt="" />{% endif %}
+    <div>
+      <h1 class="page-title" style="margin-top: 0">{{ driver.full_name }}</h1>
+      <p class="lede" style="margin-top: 4px">
+        {{ driver.code }} · #{{ driver.driver_number }} ·
+        <span style="color: #{{ driver.team_colour }}">{{ driver.team_name }}</span>
+      </p>
+    </div>
+  </div>
+</header>
+
+<section aria-labelledby="races-h" style="margin-top: 28px">
+  <div class="section-head">
+    <span class="section-no">01</span>
+    <h2 class="section-title" id="races-h">สนามที่ลงแข่งฤดูกาลนี้</h2>
+    <span class="section-note">{{ races|length }} สนาม</span>
+  </div>
+
+  {% if not races %}
+  <div class="empty">
+    <p class="empty-title">ไม่พบตารางแข่งของนักแข่งคนนี้</p>
+  </div>
+  {% else %}
+  <div class="card-grid">
+    {% for r in races %}
+    <a class="panel hoverable card-link race-in"
+       style="animation-delay: {{ (loop.index0 if loop.index0 < 12 else 12) * 0.03 }}s"
+       href="{{ url_for('analysis_page', race_key=r.race_key, driver=driver.code) }}">
+      <div class="panel-body">
+        <h3 class="panel-title">{{ r.label }}</h3>
+      </div>
+      <div class="panel-foot">เปิด Strategy Analysis →</div>
+    </a>
+    {% endfor %}
+  </div>
+  {% endif %}
+</section>
+
+{% endblock %}

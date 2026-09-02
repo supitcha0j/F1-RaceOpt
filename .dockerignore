@@ -1,0 +1,9 @@
+# cache/2023_* คือ FastF1 cache ของฤดูกาล 2023 ที่แอปไม่แตะเลย (LATEST_SEASON = 2025 เสมอ)
+# เก็บไว้ใน git ตามที่ตกลงไว้ แต่ไม่จำเป็นต้องส่งเข้า production image (~273MB)
+cache/2023_*
+
+.git
+.gitignore
+__pycache__/
+*.pyc
+.claude/

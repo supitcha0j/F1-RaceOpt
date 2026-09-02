@@ -1,5 +1,5 @@
 # app.py
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request, url_for, abort
 import pickle, math, re
 from pathlib import Path
 import numpy as np
@@ -13,8 +13,11 @@ from race_simulator import (simulate_full_race, compute_win_probabilities,
                              compute_lap_positions)
 from strategy_optimizer import (calibrate_pace_offset, grid_search_strategies,
                                 explain_parameters, simulate_strategy, classify_pit_tactics)
+import media
 
 app = Flask(__name__)
+app.jinja_env.globals["driver_photo"] = media.driver_photo
+app.jinja_env.globals["circuit_photo"] = media.circuit_photo
 
 # ── โหลดโมเดล ────────────────────────────────────────────
 with open("model.pkl", "rb") as f:
@@ -109,6 +112,19 @@ def _build_combos():
 
 
 COMBOS = _build_combos()
+
+
+def _build_driver_races():
+    """นักแข่ง -> สนามทุกสนามที่เขาลงจริงในฤดูกาลนี้ เรียงตามรอบ (offline จาก schedule cache)
+    ใช้ในหน้ารายละเอียดนักแข่งให้เลือกเปิด Strategy Analysis ของสนามไหนก็ได้ที่เขาเคยลง"""
+    mapping = {}
+    for race_key, info in AVAILABLE_RACES.items():
+        for code in get_available_drivers(info["year"], info["gp"]):
+            mapping.setdefault(code, []).append((info["gp"], race_key))
+    return {code: [rk for _, rk in sorted(races)] for code, races in mapping.items()}
+
+
+DRIVER_RACES = _build_driver_races()
 
 
 # ── Helpers ที่ใช้ร่วมกันระหว่าง Homepage / Strategy Analysis ─
@@ -383,7 +399,7 @@ def model_report_page():
 @app.route("/analysis", methods=["GET", "POST"])
 def analysis_page():
     # request.values (ไม่ใช่แค่ request.form) เพื่อให้ลิงก์แบบ /analysis?race_key=..&driver=..
-    # จากหน้า Circuit Library / Records เปิดมาแล้ววิเคราะห์ได้ทันที ไม่ต้องกดฟอร์มซ้ำ
+    # จาก Home เปิดมาแล้ววิเคราะห์ได้ทันที ไม่ต้องกดฟอร์มซ้ำ
     selected_race_key = request.values.get("race_key", _default_race_key)
     race_info = AVAILABLE_RACES.get(selected_race_key, AVAILABLE_RACES[_default_race_key])
 
@@ -425,7 +441,7 @@ def analysis_page():
 # ── หน้า 3 — Play Strategy ──────────────────────────────
 @app.route("/play", methods=["GET", "POST"])
 def play_strategy_page():
-    # request.values เพื่อให้ /play?race_key=.. จาก Circuit Library เลือกสนามให้ล่วงหน้าได้
+    # request.values เพื่อให้ /play?race_key=.. เลือกสนามให้ล่วงหน้าได้จากลิงก์ภายนอก
     selected_race_key = request.values.get("race_key", _default_race_key)
     race_info  = AVAILABLE_RACES.get(selected_race_key, AVAILABLE_RACES[_default_race_key])
     total_laps = race_info["laps"]
@@ -540,7 +556,9 @@ def play_strategy_page():
             "labels": list(range(1, total_laps + 1)),
             "field_size": len(combined),
             "user": lap_positions["YOU"],
-            "rivals": [{"code": c, "positions": lap_positions[c]} for c in context_codes],
+            "rivals": [{"code": c, "positions": lap_positions[c],
+                       "photo": (url_for('static', filename=media.driver_photo(c))
+                                 if media.driver_photo(c) else None)} for c in context_codes],
             "pit_laps": [l for l in (pit_lap, second_pit_lap) if l],
         }
 
@@ -557,86 +575,63 @@ def play_strategy_page():
     )
 
 
-# ── หน้า Circuit Library — โปรไฟล์กลยุทธ์รายสนามจาก combination ที่วิเคราะห์แล้วจริง ──
-@app.route("/circuits")
-def circuits_page():
-    round_to_race = {(info["year"], info["gp"]): (key, info) for key, info in AVAILABLE_RACES.items()}
+# ── หน้า Drivers — กริดจริงของฤดูกาลนี้ พร้อมรูป/ทีมจริงจาก OpenF1 ──
+@app.route("/drivers")
+def drivers_page():
+    drivers = sorted(media.driver_meta_list(), key=lambda d: (d["team_name"], d["code"]))
+    return render_template("drivers.html", drivers=drivers)
 
+
+# ── หน้ารายละเอียดนักแข่ง — ไม่โผล่ใน nav bar เข้าถึงได้จากการ์ดในหน้า Drivers/Teams เท่านั้น
+# ตั้งใจแยกจาก Strategy Analysis: หน้านี้ "อธิบายนักแข่ง" (ทีม เบอร์รถ สนามที่เคยลงจริง) ส่วนกลยุทธ์
+# เจาะลึกยังอยู่ที่ Strategy Analysis — กดเลือกสนามจากหน้านี้เพื่อไปที่นั่นอีกที ──
+@app.route("/drivers/<code>")
+def driver_detail_page(code):
+    code = code.upper()
+    driver = next((d for d in media.driver_meta_list() if d["code"] == code), None)
+    if driver is None:
+        abort(404)
+
+    races = [
+        {"race_key": rk, "label": AVAILABLE_RACES[rk]["label"]}
+        for rk in DRIVER_RACES.get(code, []) if rk in AVAILABLE_RACES
+    ]
+    return render_template("driver_detail.html", driver=driver, races=races)
+
+
+def _team_slug(name):
+    return re.sub(r"[^a-z0-9]+", "-", name.lower()).strip("-")
+
+
+def _build_teams():
     groups = {}
-    for c in COMBOS:
-        groups.setdefault((c["year"], c["round"]), []).append(c)
-
-    circuits = []
-    for (year, round_no), combos in groups.items():
-        race_key, race_info = round_to_race.get((year, round_no), (None, None))
-        label      = race_info["label"] if race_info else f"{combos[0]['gp']} GP {year}"
-        total_laps = race_info["laps"] if race_info else combos[0]["laps"]
-        pit_loss   = estimate_pit_loss(year, round_no)
-
-        # โปรไฟล์ tyre degradation จาก stint จริงของนักแข่งคนแรกที่มี lap cache อยู่แล้ว —
-        # ไม่ fetch ใหม่ เพราะคนนี้ถูกค้นพบจาก cache/*.pkl ตอน build COMBOS อยู่แล้ว
-        deg_level, avg_deg = "Unknown", None
-        try:
-            data, meta = load_race_laps(year=year, gp=round_no, driver=combos[0]["driver"])
-            stints = _extract_stints(data, meta)
-            deg_rates = [s["deg_rate"] for s in stints if s["deg_rate"] is not None]
-            if deg_rates:
-                avg_deg = round(sum(deg_rates) / len(deg_rates), 3)
-                deg_level = "Low" if avg_deg < 0.03 else "Medium" if avg_deg < 0.08 else "High"
-        except Exception:
-            pass
-
-        circuits.append({
-            "race_key": race_key, "label": label, "year": year, "total_laps": total_laps,
-            "pit_loss": pit_loss, "deg_level": deg_level, "avg_deg": avg_deg,
-            "drivers_analyzed": sorted(set(c["driver"] for c in combos)),
-            "avg_diff_pct": round(sum(c["diff_pct"] for c in combos) / len(combos), 2),
-            "weather": combos[0]["weather"],
+    for d in media.driver_meta_list():
+        team = groups.setdefault(d["team_name"], {
+            "team_name": d["team_name"], "team_colour": d["team_colour"], "drivers": [],
         })
+        team["drivers"].append(d)
 
-    circuits.sort(key=lambda c: (-c["year"], c["label"]))
-    wet_count    = sum(1 for c in circuits if c["weather"] and c["weather"]["wet"])
-    avg_pit_loss = round(sum(c["pit_loss"] for c in circuits) / len(circuits), 1) if circuits else 0.0
-
-    return render_template(
-        "circuits.html", circuits=circuits, wet_count=wet_count, avg_pit_loss=avg_pit_loss,
-    )
+    teams = sorted(groups.values(), key=lambda t: t["team_name"])
+    for t in teams:
+        t["drivers"].sort(key=lambda d: d["code"])
+        t["slug"] = _team_slug(t["team_name"])
+    return teams
 
 
-# ── หน้า Records — สถิติเด่นรวมจากทุก combination ที่โมเดลเคยตรวจสอบจริง ──
-@app.route("/records")
-def records_page():
-    if not COMBOS:
-        return render_template("records.html", combos=[], records=None)
+# ── หน้า Teams — จัดกลุ่มนักแข่งจริงตามทีมจริง ใช้สีทีมจริงแทนภาพ logo ──
+@app.route("/teams")
+def teams_page():
+    return render_template("teams.html", teams=_build_teams())
 
-    round_to_key = {(info["year"], info["gp"]): key for key, info in AVAILABLE_RACES.items()}
 
-    def _with_link(c):
-        return {**c, "race_key": round_to_key.get((c["year"], c["round"]))}
-
-    combos      = [_with_link(c) for c in COMBOS]
-    by_accuracy = sorted(combos, key=lambda c: abs(c["diff_pct"]))
-    by_pace     = sorted(combos, key=lambda c: c["real_total"] / c["laps"])
-    wet_combos  = [c for c in combos if c["weather"] and c["weather"]["wet"]]
-    dry_combos  = [c for c in combos if c["weather"] and not c["weather"]["wet"]]
-
-    records = {
-        "most_accurate":  by_accuracy[0],
-        "least_accurate": by_accuracy[-1],
-        "fastest_pace":   by_pace[0],
-        "slowest_pace":   by_pace[-1],
-        "longest_race":   max(combos, key=lambda c: c["laps"]),
-        "wet_count": len(wet_combos), "dry_count": len(dry_combos),
-        "circuit_count": len({(c["year"], c["round"]) for c in combos}),
-        "total_laps": sum(c["laps"] for c in combos),
-    }
-
-    return render_template(
-        "records.html",
-        best5=by_accuracy[:5],
-        worst5=list(reversed(by_accuracy[-5:])),
-        records=records,
-    )
+# ── หน้ารายละเอียดทีม — ไม่โผล่ใน nav bar เข้าถึงได้จากการ์ดในหน้า Teams เท่านั้น (รูปแบบเดียว
+# กับหน้ารายละเอียดนักแข่ง) ──
+@app.route("/teams/<slug>")
+def team_detail_page(slug):
+    team = next((t for t in _build_teams() if t["slug"] == slug), None)
+    if team is None:
+        abort(404)
+    return render_template("team_detail.html", team=team)
 
 
 # ── หน้า About — วิธีทำงานของระบบ ที่มาของข้อมูล และขอบเขตของผลลัพธ์ ──

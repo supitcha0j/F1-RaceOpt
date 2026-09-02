@@ -295,7 +295,10 @@
               <td class="rk {% if r.rank == 1 %}lead{% elif not r.is_user %}fg2{% endif %}">{{ r.rank }}</td>
               <td>
                 {% if r.is_user %}<span class="lead" style="font-weight: 600">YOU</span>
-                {% else %}<span style="font-weight: 500">{{ r.code }}</span>{% endif %}
+                {% else %}
+                {% set dph = driver_photo(r.code) %}
+                <span class="avatar-row" style="font-weight: 500">{% if dph %}<img class="avatar" src="{{ url_for('static', filename=dph) }}" alt="" />{% endif %}{{ r.code }}</span>
+                {% endif %}
               </td>
               <td class="t-ctr col-opt dim">{% if r.is_user %}—{% else %}P{{ r.grid }}{% endif %}</td>
               <td>
@@ -464,14 +467,15 @@
 
     // ── Live standings ladder — ตำแหน่งคุณ + คู่แข่งใกล้เคียง จัดเรียงใหม่
     // ทุกรอบด้วย FLIP animation ให้เห็นแถวสลับที่กันจริงๆ เหมือนกระดานสด
-    var ladderData = [{ code: "YOU", positions: progress.user, isUser: true }]
-      .concat(progress.rivals.map(function (r) { return { code: r.code, positions: r.positions, isUser: false }; }));
+    var ladderData = [{ code: "YOU", positions: progress.user, isUser: true, photo: null }]
+      .concat(progress.rivals.map(function (r) { return { code: r.code, positions: r.positions, isUser: false, photo: r.photo }; }));
     var rowEls = {};
     ladderData.forEach(function (e) {
       var row = document.createElement("div");
       row.className = "replay-row" + (e.isUser ? " you" : "");
       row.dataset.code = e.code;
-      row.innerHTML = '<span class="replay-row-pos"></span><span class="replay-row-code">' + e.code + "</span>";
+      var avatarHtml = e.photo ? '<img class="avatar" src="' + e.photo + '" alt="" />' : "";
+      row.innerHTML = '<span class="replay-row-pos"></span>' + avatarHtml + '<span class="replay-row-code">' + e.code + "</span>";
       ladderEl.appendChild(row);
       rowEls[e.code] = row;
     });

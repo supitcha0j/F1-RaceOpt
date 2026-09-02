@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% block title %}Drivers · RaceOpt{% endblock %}
+
+{% block content %}
+
+<header class="page-head">
+  <p class="eyebrow">Drivers</p>
+  <h1 class="page-title">นักแข่งฤดูกาลนี้</h1>
+  <p class="lede">นักแข่งทั้งหมดของฤดูกาลปัจจุบัน พร้อมทีมและเบอร์รถจริง</p>
+</header>
+
+{% if not drivers %}
+<div class="empty">
+  <p class="empty-title">ยังไม่มีข้อมูลนักแข่ง</p>
+  <p class="empty-note">รัน <code>python fetch_media.py</code> เพื่อดึงข้อมูลนักแข่งก่อน</p>
+</div>
+{% else %}
+
+<div class="card-grid" style="margin-top: 20px">
+  {% for d in drivers %}
+  <a class="panel accent hoverable card-link race-in"
+     style="animation-delay: {{ (loop.index0 if loop.index0 < 12 else 12) * 0.03 }}s; border-left-color: #{{ d.team_colour }}"
+     href="{{ url_for('driver_detail_page', code=d.code) }}">
+    <div class="panel-body">
+      <div class="avatar-row" style="gap: 12px; align-items: flex-start">
+        {% set dph = driver_photo(d.code) %}
+        {% if dph %}<img class="avatar avatar-lg" src="{{ url_for('static', filename=dph) }}" alt="" />{% endif %}
+        <div>
+          <h3 class="panel-title">{{ d.full_name }}</h3>
+          <span class="panel-note">{{ d.code }} · #{{ d.driver_number }}</span>
+        </div>
+      </div>
+      <p class="kv" style="margin-top: 12px">{{ d.team_name }}</p>
+    </div>
+    <div class="panel-foot">ดูข้อมูลนักแข่ง →</div>
+  </a>
+  {% endfor %}
+</div>
+
+{% endif %}
+
+{% endblock %}
