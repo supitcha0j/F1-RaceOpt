@@ -42,14 +42,14 @@
   <div class="stage-heading"><p>Every second. Every decision.</p><h1 id="stage-title">THINK <span>FASTER.</span></h1></div>
   <div class="car-view">
     <img class="car-fallback" src="{{ url_for('static', filename='img/hero-car.jpg') }}" alt="รถแข่ง Formula 1" />
-    <canvas id="race-car" tabindex="0" role="img" aria-label="โมเดลรถแข่ง 3D ลากเพื่อหมุน หรือใช้ปุ่มลูกศร และ Home เพื่อคืนมุมเริ่มต้น">โมเดลรถแข่ง 3D</canvas>
+    <canvas id="race-car" role="img" aria-label="รถแข่ง 3D เคลื่อนไหวอัตโนมัติ">โมเดลรถแข่ง 3D</canvas>
   </div>
-  <div class="stage-bottom"><span>01 / The strategy starts here</span><div class="view-controls" aria-label="มุมมองรถ 3D"><button type="button" data-car-view="0.55" aria-pressed="true">3D VIEW</button><button type="button" data-car-view="0" aria-pressed="false">SIDE</button><button type="button" data-car-view="1.57" aria-pressed="false">FRONT</button></div><span>↔ Drag to explore</span></div>
+  <div class="stage-bottom"><span class="stage-caption">01 / Built for the next move</span><a class="stage-explore" href="#intro-title">Explore the strategy <span aria-hidden="true">↓</span></a></div>
 </section>
 <section class="editorial-intro" aria-labelledby="intro-title">
   <p class="eyebrow">The art of race strategy</p>
   <h2 id="intro-title">ชัยชนะเริ่มต้น<br>ก่อนถึงโค้งแรก</h2>
-  <p>อ่านเกมจากข้อมูลจริง ค้นหาจังหวะเข้าพิทที่ใช่ และทดลองกลยุทธ์ของคุณเอง ด้วยพลังของ AI และข้อมูลการแข่งขัน Formula 1</p>
+  <p>อ่านเกมจากข้อมูลจริง ค้นหาจังหวะเข้าพิทที่ใช่ และทดลองกลยุทธ์ของคุณเอง จากข้อมูลการแข่งขัน Formula 1</p>
   <div class="hero-actions"><a class="btn" href="{{ url_for('analysis_page') }}">วิเคราะห์กลยุทธ์ <span aria-hidden="true">↗</span></a><a class="btn ghost" href="{{ url_for('play_strategy_page') }}">เปิด Strategy Lab <span aria-hidden="true">→</span></a></div>
 </section>
     {% if analysis %}
@@ -86,7 +86,7 @@
 <!-- ═══ Quick links — key modules of the tool ═══════════════ -->
 <section class="feature-band" aria-labelledby="feat-h">
   <div class="feature-head">
-    <h2 class="feature-title" id="feat-h">Explore the paddock</h2>
+    <h2 class="feature-title" id="feat-h">From the pit wall</h2>
     <a class="btn" href="{{ url_for('analysis_page') }}">
       เริ่มวิเคราะห์
       <svg class="btn-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
@@ -112,14 +112,14 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-8 8-8s8 3.6 8 8"/></svg>
       </span>
       <span class="feature-card-title">Drivers</span>
-      <span class="feature-card-desc">โปรไฟล์นักแข่งทั้ง 20 คน พร้อมทุกสนามที่วิเคราะห์ได้</span>
+      <span class="feature-card-desc">โปรไฟล์นักแข่ง พร้อมสนามที่ลงแข่งและกลยุทธ์รายสนาม</span>
     </a>
     <a class="feature-card" href="{{ url_for('teams_page') }}">
       <span class="feature-card-icon" aria-hidden="true">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
       </span>
       <span class="feature-card-title">Teams</span>
-      <span class="feature-card-desc">ทีมทั้ง 10 ทีมและนักแข่งในสังกัด จัดกลุ่มตามสี team colour</span>
+      <span class="feature-card-desc">รายชื่อทีมและนักแข่งในสังกัด</span>
     </a>
   </div>
 </section>

@@ -1,0 +1,120 @@
+/* RaceOpt: restrained editorial layouts and working race-desk components. */
+:root { --bg:#fbfaf8; --surface:#fff; --fg:#1c1c1c; --fg-2:#595b5d; --line:#deddd8; --line-2:#c9c8c2; }
+body { font-size:14px; }
+.main { padding-bottom:80px; }
+.main > .eyebrow:first-child { display:inline-block; margin-top:28px; }
+.main > .page-head { position:relative; max-width:none; padding:58px 0 38px; border-bottom:2px solid #202124; }
+.page-head .eyebrow { letter-spacing:.12em; font-size:10px; }
+.page-head .page-title { font-size:clamp(32px,4.6vw,60px); line-height:1.25; letter-spacing:-1px; text-transform:none; margin:16px 0; }
+.page-head .lede { max-width:72ch; line-height:1.85; }
+.page-head::after { content:''; position:absolute; bottom:-2px; left:0; width:72px; height:4px; background:var(--brand); }
+.page-title,.section-title,.panel-title { text-wrap:balance; }
+.section-title { font-size:clamp(20px,2.4vw,28px); }
+.section-note { font-size:11px; }
+.section-head { flex-wrap:wrap; row-gap:8px; }
+.section-sub { max-width:85ch; line-height:1.9; }
+.panel,.metric { border-radius:0; }
+.panel-head { padding:18px 22px; background:#f2f1ed; border-bottom:1px solid var(--line); }
+.panel-title { font-family:var(--sans); font-size:15px; }
+.panel-body { padding:24px; }
+.panel-foot { padding:12px 22px; background:transparent; color:#60615d; line-height:1.7; }
+.tbl th { background:#eeede8; color:#5c5d58; font-size:10px; letter-spacing:.06em; padding:15px 16px; }
+.tbl td { padding:16px; border-bottom-color:#eae9e4; }
+.tbl tbody tr:nth-child(even) { background:#faf9f6; }
+.tbl tbody tr:hover { background:#f5f1eb; }
+.metrics { background:white; }
+.metric-k { letter-spacing:.07em; color:#67675f; }
+.metric-v { font-weight:500; }
+.metric-u { color:#737269; }
+.btn { font-family:var(--sans); text-transform:none; letter-spacing:0; min-height:44px; padding:12px 22px; clip-path:none; }
+.field label { font-family:var(--sans); text-transform:none; font-size:12px; letter-spacing:0; margin-bottom:9px; color:#4c4c47; }
+input,select { min-height:46px; background:#fff; border:1px solid #bdbdb5; border-radius:2px; font-size:12px; }
+.form-row { gap:22px; }
+.notice { border-radius:0; border-width:0 0 0 3px; padding:18px 22px; line-height:1.85; }
+.notice-warn { background:#f4f0e6; }
+.empty { background:#f1f0eb; border:0; padding:40px 28px; }
+.empty-title { font-family:var(--sans); font-size:18px; color:var(--fg); }
+.empty-note { font-family:var(--sans); line-height:1.9; }
+.card-3d,.card-3d > .panel,.card-3d:hover > .panel,.hoverable:hover { transform:none!important; perspective:none; box-shadow:none; }
+.reveal,.race-in { opacity:1!important; transform:none!important; animation:none!important; }
+.section-visual { padding:0; border:0; overflow:visible; background:transparent; }
+.section-visual-content { padding:0; }
+.shimmer::before,.shimmer::after,.section-visual-bg,.particles,.speed-lines { display:none; }
+.tyre-3d { animation:none; }
+.roster-caption { display:flex; justify-content:space-between; font:11px var(--mono); padding-bottom:14px; border-bottom:1px solid var(--line); color:var(--fg-2); }
+.driver-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:30px; margin-top:24px!important; }
+.driver-card { text-decoration:none; display:block; border-bottom:1px solid #aaa; }
+.driver-portrait { height:188px; background:#eae9e4; position:relative; overflow:hidden; border-top:3px solid var(--team-color); }
+.driver-portrait::after { content:''; position:absolute; width:40%; height:100%; right:-25%; top:0; background:var(--team-color); transform:skew(-22deg); }
+.driver-portrait img { position:absolute; bottom:0; right:15%; object-fit:contain; width:150px; height:150px; z-index:1; transition:transform .25s ease; }
+.driver-number { font:italic 700 112px/1 var(--display); position:absolute; left:16px; top:15px; color:#d0cfc8; letter-spacing:-6px; }
+.driver-code { position:absolute; bottom:14px; left:18px; font:600 12px var(--mono); letter-spacing:.15em; }
+.driver-caption { padding:18px 0 20px; position:relative; }
+.driver-caption p { color:#62645c; font-size:11px; margin-bottom:5px; }
+.driver-caption h2 { font:600 23px/1.3 var(--display); max-width:85%; }
+.driver-card-link { display:flex; justify-content:space-between; font:11px var(--mono); margin-top:14px; color:#6c6c66; }
+.driver-card-link span { color:var(--fg); font-size:19px; }
+.driver-card:hover { border-color:var(--brand); }
+.driver-card:hover img { transform:translateY(-4px); }
+.team-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:28px; margin-top:24px!important; }
+.team-sheet { border:1px solid var(--line); background:white; }
+.team-sheet header { padding:25px 26px; background:#191a1a; border-top:4px solid var(--team-color); }
+.team-index { font:11px var(--mono); color:#aaa; }
+.team-sheet h2 { margin-top:18px; font:600 29px/1.2 var(--display); color:white; }
+.team-sheet h2 a { display:flex; justify-content:space-between; gap:16px; text-decoration:none; }
+.team-sheet h2 span { color:var(--team-color); }
+.team-lineup { padding:0 24px; }
+.team-lineup > a { display:flex; align-items:center; gap:15px; text-decoration:none; padding:15px 0; border-bottom:1px solid var(--line); }
+.team-lineup img { object-fit:contain; background:#f1f0ec; }
+.team-lineup strong { display:block; font-size:14px; font-weight:500; }
+.team-lineup small { display:block; color:#777; margin-top:4px; font:10px var(--mono); }
+.team-lineup b { margin-left:auto; font:500 28px var(--display); color:#777; }
+.team-sheet footer { display:flex; justify-content:space-between; padding:16px 24px; font-size:11px; color:#666; }
+.team-sheet footer a { text-decoration:none; color:var(--fg); }
+.profile-head { position:relative; display:flex; align-items:center; gap:25px; min-height:245px; background:#1c1d1e; color:#fff; padding:36px; border-bottom:5px solid var(--team-color); overflow:hidden; }
+.profile-head > div { z-index:1; flex:1; }
+.profile-head .eyebrow { color:#bbb; }
+.profile-head h1 { font:600 clamp(32px,4vw,55px)/1.15 var(--display); margin:18px 0; }
+.profile-meta { font-size:12px; color:#bbb; }
+.profile-head img { object-fit:contain; align-self:flex-end; z-index:1; }
+.profile-number { position:absolute; right:120px; font:italic 700 220px/1 var(--display); color:#ffffff0b; }
+.constructor-stripes { font:italic 700 150px/1 var(--display); color:var(--team-color); letter-spacing:-20px; padding-right:20px; }
+.race-directory { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); column-gap:32px; }
+.race-directory .panel { background:none; border:0; border-bottom:1px solid var(--line); }
+.race-directory .panel-body { display:flex; gap:20px; padding:22px 0 10px; }
+.race-order { font:12px var(--mono); color:#8a8b83; }
+.race-directory .panel-foot { border:0; padding:0 0 20px 36px; font-size:10px; }
+.analysis-preview { display:grid; grid-template-columns:1fr 1fr; background:#f0efea; }
+.analysis-preview img { width:100%; height:100%; min-height:300px; max-height:400px; object-fit:cover; filter:saturate(.65); }
+.analysis-preview > div { padding:36px; }
+.analysis-preview h2 { font-size:28px; line-height:1.45; margin:18px 0; }
+.analysis-preview p:not(.eyebrow) { color:var(--fg-2); line-height:1.9; }
+.workflow { padding-left:20px; font-size:12px; color:#64645d; line-height:2.3; margin-top:22px; }
+.garage-preview { padding:38px; background:#191a1b; color:#f6f4ed; min-height:530px; }
+.garage-preview h2 { margin:18px 0; font-size:clamp(25px,3vw,39px); line-height:1.45; }
+.garage-preview > p:last-of-type { color:#bbb; max-width:42ch; line-height:1.9; }
+.compound-display { display:flex; gap:20px; justify-content:center; padding:40px 0; }
+.display-tyre { display:grid; place-items:center; width:100px; height:100px; background:#181919; border:7px solid currentColor; outline:10px solid #0d0e0f; border-radius:50%; font:600 30px var(--display); box-shadow:8px 12px 0 #090a0b; }
+.display-tyre.soft { color:#e9473f; }.display-tyre.medium { color:#ead053; }.display-tyre.hard { color:#e7e5dc; }
+.garage-note { margin-top:32px; padding-top:20px; border-top:1px solid #ffffff24; display:flex; flex-wrap:wrap; gap:16px; font-size:10px; color:#aaa; }
+.page-play_strategy_page .lab-form .panel { border-top:3px solid #1c1c1c; }
+.page-model_report_page .main > .notice,.page-about_page .main > .notice { max-width:90ch; }
+.page-model_report_page .metrics { border-top:3px solid var(--fg); }
+.page-about_page .main { max-width:1120px; }
+.page-about_page .section-sub { font-size:14px; }
+.page-about_page section { padding-bottom:24px; }
+.error-number { display:block; font:italic 700 clamp(100px,22vw,220px)/1 var(--display); color:var(--brand); letter-spacing:-8px; margin-bottom:22px; }
+.foot { background:#1b1c1d; }
+.foot-inner { max-width:1360px; }
+.foot-disclaimer p { color:#aaa; }
+#intro-title { scroll-margin-top:110px; }
+@media(max-width:950px) { .driver-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }.display-tyre { width:76px; height:76px; }.garage-preview { padding:28px; }.compound-display { gap:20px; } }
+@media(max-width:639px) {
+  .main > .page-head { padding:35px 0 26px; }.page-head .page-title { font-size:32px; }.page-head .lede { font-size:13px; }
+  .driver-grid { gap:22px 14px; }.driver-portrait { height:145px; }.driver-portrait img { width:110px; height:110px; right:0; }.driver-number { font-size:78px; left:8px; }.driver-code { left:10px; font-size:10px; }.driver-caption h2 { font-size:19px; }
+  .team-grid,.race-directory,.analysis-preview { grid-template-columns:1fr; }.analysis-preview img { min-height:180px; max-height:220px; }.analysis-preview > div { padding:25px; }
+  .profile-head { padding:24px; gap:8px; min-height:220px; }.profile-head img { width:110px; height:110px; }.profile-head h1 { font-size:30px; }.profile-number { right:20px; font-size:170px; }.constructor-stripes { font-size:80px; letter-spacing:-14px; }
+  .panel-body { padding:18px; }.panel-head { padding:15px 18px; }.garage-preview { min-height:440px; padding:26px; }.display-tyre { width:70px; height:70px; border-width:5px; outline-width:7px; }.compound-display { gap:24px; }
+  .tbl td,.tbl th { padding:12px; }.section-note { margin-left:0; }.metric { padding:18px; }
+}
+@media(prefers-reduced-motion:reduce) { .driver-card:hover img { transform:none; } }

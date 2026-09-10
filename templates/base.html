@@ -1377,8 +1377,9 @@
       }
     </style>
     <link rel="stylesheet" href="{{ url_for('static', filename='racing.css') }}" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='editorial.css') }}" />
   </head>
-  <body>
+  <body class="page-{{ request.endpoint or 'not_found' }}">
     <a class="skip" href="#main">ข้ามไปเนื้อหาหลัก</a>
     <div class="topline"></div>
 
@@ -1396,9 +1397,9 @@
           <a class="tab" href="{{ url_for('play_strategy_page') }}"
              {% if request.endpoint == 'play_strategy_page' %}aria-current="page"{% endif %}>Strategy Lab</a>
           <a class="tab" href="{{ url_for('drivers_page') }}"
-             {% if request.endpoint == 'drivers_page' %}aria-current="page"{% endif %}>Drivers</a>
+             {% if request.endpoint in ('drivers_page', 'driver_detail_page') %}aria-current="page"{% endif %}>Drivers</a>
           <a class="tab" href="{{ url_for('teams_page') }}"
-             {% if request.endpoint == 'teams_page' %}aria-current="page"{% endif %}>Teams</a>
+             {% if request.endpoint in ('teams_page', 'team_detail_page') %}aria-current="page"{% endif %}>Teams</a>
           <a class="tab" href="{{ url_for('model_report_page') }}"
              {% if request.endpoint == 'model_report_page' %}aria-current="page"{% endif %}>Model Report</a>
         </div>
@@ -1424,95 +1425,6 @@
         </p>
       </div>
     </footer>
-
-    <script>
-      // Count-up on the headline instrument numbers (data-countup="<final value>").
-      // Renders the final value immediately under prefers-reduced-motion — this is
-      // a presentation flourish only, the DOM already holds the correct final text.
-      (function () {
-        var reduce = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
-        function countUp(el) {
-          var end = parseFloat(el.dataset.countup);
-          if (isNaN(end)) return;
-          var decimals = (el.dataset.countup.split(".")[1] || "").length;
-          var prefix = el.dataset.prefix || "";
-          var suffix = el.dataset.suffix || "";
-          if (reduce) return;
-          var dur = 600, t0 = null;
-          function step(ts) {
-            if (!t0) t0 = ts;
-            var p = Math.min((ts - t0) / dur, 1);
-            var eased = 1 - Math.pow(1 - p, 3);
-            el.textContent = prefix + (end * eased).toFixed(decimals) + suffix;
-            if (p < 1) requestAnimationFrame(step);
-            else el.textContent = prefix + end.toFixed(decimals) + suffix;
-          }
-          requestAnimationFrame(step);
-        }
-        document.addEventListener("DOMContentLoaded", function () {
-          document.querySelectorAll("[data-countup]").forEach(countUp);
-        });
-      })();
-
-      /* ── Scroll reveal observer ─────────────────────── */
-      (function () {
-        if (window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches) {
-          document.querySelectorAll(".reveal").forEach(function (el) { el.classList.add("revealed"); });
-          return;
-        }
-        var obs = new IntersectionObserver(function (entries) {
-          entries.forEach(function (e) {
-            if (e.isIntersecting) {
-              e.target.classList.add("revealed");
-              obs.unobserve(e.target);
-            }
-          });
-        }, { threshold: 0.12 });
-        document.addEventListener("DOMContentLoaded", function () {
-          document.querySelectorAll(".reveal").forEach(function (el) { obs.observe(el); });
-        });
-      })();
-
-      /* ── Particle system for hero ──────────────────── */
-      (function () {
-        if (window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-        document.addEventListener("DOMContentLoaded", function () {
-          var container = document.querySelector(".particles");
-          if (!container) return;
-          for (var i = 0; i < 18; i++) {
-            var p = document.createElement("span");
-            p.className = "particle";
-            p.style.left = Math.random() * 100 + "%";
-            p.style.top = 50 + Math.random() * 50 + "%";
-            p.style.setProperty("--px", (Math.random() - 0.5) * 160 + "px");
-            p.style.setProperty("--py", -(40 + Math.random() * 120) + "px");
-            p.style.animationDuration = 3 + Math.random() * 5 + "s";
-            p.style.animationDelay = Math.random() * 6 + "s";
-            container.appendChild(p);
-          }
-        });
-      })();
-
-      /* ── 3D tilt effect on card-3d elements ─────────── */
-      (function () {
-        if (window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-        document.addEventListener("DOMContentLoaded", function () {
-          document.querySelectorAll(".card-3d").forEach(function (card) {
-            var panel = card.querySelector(".panel");
-            if (!panel) return;
-            card.addEventListener("mousemove", function (e) {
-              var rect = card.getBoundingClientRect();
-              var x = (e.clientX - rect.left) / rect.width - 0.5;
-              var y = (e.clientY - rect.top) / rect.height - 0.5;
-              panel.style.transform = "rotateY(" + (x * 8) + "deg) rotateX(" + (-y * 6) + "deg) translateZ(6px)";
-            });
-            card.addEventListener("mouseleave", function () {
-              panel.style.transform = "rotateX(0) rotateY(0) translateZ(0)";
-            });
-          });
-        });
-      })();
-    </script>
 
     {% block scripts %}{% endblock %}
   </body>

@@ -1,0 +1,11 @@
+{% macro driver_card(d) %}
+<a class="driver-card" style="--team-color:#{{ d.team_colour }}" href="{{ url_for('driver_detail_page', code=d.code) }}">
+  <div class="driver-portrait">
+    <span class="driver-number" aria-hidden="true">{{ d.driver_number }}</span>
+    {% set photo = driver_photo(d.code) %}
+    {% if photo %}<img src="{{ url_for('static', filename=photo) }}" alt="" loading="lazy" width="150" height="150" />{% endif %}
+    <span class="driver-code">{{ d.code }}</span>
+  </div>
+  <div class="driver-caption"><p>{{ d.team_name }}</p><h2>{{ d.full_name }}</h2><span class="driver-card-link">#{{ d.driver_number }} <span aria-hidden="true">↗</span></span></div>
+</a>
+{% endmacro %}

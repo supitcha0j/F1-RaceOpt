@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}Strategy Analysis · RaceOpt{% endblock %}
+{% block title %}อ่านการแข่งขันให้ขาด · RaceOpt{% endblock %}
 
 {#- ── Tyre + stint primitives ─────────────────────────────── -#}
 {%- macro cmp(c) -%}
@@ -43,11 +43,10 @@
 {% block content %}
 
 <header class="page-head">
-  <p class="eyebrow">Strategy optimisation</p>
+  <p class="eyebrow">01 / Strategy desk</p>
   <h1 class="page-title">Strategy Analysis</h1>
   <p class="lede">
-    เลือกสนามและนักแข่ง — ระบบจะ calibrate โมเดลกับ lap time จริง แล้ว grid search
-    หากลยุทธ์ยางและรอบพิทที่ให้เวลารวมเร็วกว่าผลจริง
+    ย้อนดูจังหวะสำคัญของการแข่งขัน เปรียบเทียบชุดยางและรอบเข้าพิท เพื่อค้นหาวินาทีที่ยังทำได้ดีกว่า
   </p>
 </header>
 
@@ -55,7 +54,7 @@
   <div class="panel">
     <div class="panel-head">
       <h2 class="panel-title" id="sel-h">ตั้งค่าการวิเคราะห์</h2>
-      <span class="panel-note push">Grid search · calibrated pace</span>
+      <span class="panel-note push">เลือกสนาม / เลือกนักแข่ง</span>
     </div>
     <div class="panel-body">
       <form method="post" class="form-row">
@@ -346,10 +345,10 @@
 
 {% else %}
 
-<div class="empty">
-  <p class="empty-title">ยังไม่มีผลการวิเคราะห์</p>
-  <p class="empty-note">เลือกสนามและนักแข่งด้านบน แล้วกด “วิเคราะห์”</p>
-</div>
+<section class="analysis-preview" aria-label="เริ่มต้นการวิเคราะห์">
+  <img src="{{ url_for('static', filename='img/circuits/Abu_Dhabi.jpg') }}" alt="สนามแข่ง Abu Dhabi" />
+  <div><p class="eyebrow">Look back. Find the difference.</p><h2>การแข่งขันจบแล้ว<br>แต่ยังมีอะไรให้ค้นหา</h2><p>เลือกสนามและนักแข่งด้านบน เพื่อดูเวลาต่อรอบ กลยุทธ์ยาง และทางเลือกในการเข้าพิท</p><ol class="workflow"><li>อ่านเวลาต่อรอบ</li><li>เปรียบเทียบกลยุทธ์</li><li>หาจังหวะเข้าพิท</li></ol></div>
+</section>
 
 {% endif %}
 {% endblock %}

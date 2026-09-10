@@ -46,8 +46,8 @@
 {% block content %}
 
 <header class="page-head">
-  <p class="eyebrow">Strategy lab</p>
-  <h1 class="page-title">ทดลองกลยุทธ์ของคุณ</h1>
+  <p class="eyebrow">02 / Race simulator</p>
+  <h1 class="page-title">ตัดสินใจจากพิทวอลล์</h1>
   <p class="lede">
     กำหนดยางและรอบพิทเอง แล้วให้โมเดลจำลองเวลารวมของคุณเทียบกับนักแข่งทั้งกริดในสนามเดียวกัน
   </p>
@@ -323,10 +323,12 @@
 
     {% else %}
 
-    <div class="empty">
-      <p class="empty-title">ยังไม่ได้จำลองกลยุทธ์</p>
-      <p class="empty-note">ตั้งค่ายางและรอบพิทด้านซ้าย แล้วกด “จำลองกลยุทธ์”</p>
-    </div>
+    <section class="garage-preview" aria-labelledby="garage-title">
+      <p class="eyebrow">Your call. Your race.</p><h2 id="garage-title">ทุกการตัดสินใจ<br>มีผลต่อเส้นชัย</h2>
+      <div class="compound-display" aria-label="ยาง Soft Medium Hard"><span class="display-tyre soft">S</span><span class="display-tyre medium">M</span><span class="display-tyre hard">H</span></div>
+      <p>เลือกยาง วางรอบเข้าพิท แล้วจำลองกลยุทธ์ของคุณเทียบกับทั้งกริด</p>
+      <div class="garage-note"><span>01 — เลือกสนาม</span><span>02 — วางแผนยาง</span><span>03 — จำลองผล</span></div>
+    </section>
 
     {% endif %}
 
