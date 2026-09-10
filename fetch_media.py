@@ -147,14 +147,45 @@ def fetch_driver_photo(code, season=None):
         print(f"  ข้าม driver {code}: {e}")
 
 
-def fetch_driver_meta(code):
-    """เมทาดาต้านักแข่ง (ทีม, สีทีม, เบอร์รถ, ชื่อเต็ม) จาก OpenF1 — request เบา (JSON ไม่ใช่ไฟล์รูป)
-    เลยไม่ skip แบบรูป ดึงใหม่ทุกครั้งที่รัน main() เพื่อให้ทันย้ายทีมกลางฤดูกาล"""
+def _season_finale_session_key(year):
+    """session_key ของ Race รอบสุดท้ายของฤดูกาล `year` — ใช้ผูก fetch_driver_meta ให้ได้
+    ทีม/เบอร์รถ ณ ท้ายฤดูกาลนั้นจริงๆ (รวมย้ายทีมกลางฤดูกาลด้วย) แทนที่จะได้ทีม "ล่าสุด"
+    ข้ามฤดูกาล ซึ่งจะเพี้ยนถ้ารัน fetch_media.py หลังนักแข่งย้ายทีมในฤดูกาลถัดไปแล้ว
+    คืนค่า None ถ้าดึงไม่ได้ (ให้ผู้เรียกใช้ fallback ไปทีม "ล่าสุด" แทน)"""
     try:
-        r = requests.get("https://api.openf1.org/v1/drivers",
-                          params={"name_acronym": code}, headers=UA, timeout=15)
+        r = requests.get("https://api.openf1.org/v1/sessions",
+                          params={"year": year, "session_type": "Race"}, headers=UA, timeout=15)
         r.raise_for_status()
-        rows = r.json()
+        races = [s for s in r.json() if s.get("session_name") == "Race"]
+        if not races:
+            return None
+        races.sort(key=lambda s: s["date_start"])
+        return races[-1]["session_key"]
+    except Exception as e:
+        print(f"  หา session ท้ายฤดูกาล {year} ไม่ได้: {e}")
+        return None
+
+
+def fetch_driver_meta(code, session_key=None):
+    """เมทาดาต้านักแข่ง (ทีม, สีทีม, เบอร์รถ, ชื่อเต็ม) จาก OpenF1 — request เบา (JSON ไม่ใช่ไฟล์รูป)
+    เลยไม่ skip แบบรูป ดึงใหม่ทุกครั้งที่รัน main()
+    ถ้าให้ `session_key` มา (เช่น รอบสุดท้ายของฤดูกาลที่ใช้วิเคราะห์) จะได้ทีม/เบอร์รถ ณ ตอนนั้นจริง
+    ไม่ใช่ทีมปัจจุบัน ณ ตอนรันสคริปต์ ซึ่งอาจเป็นฤดูกาลถัดไปที่นักแข่งย้ายทีมไปแล้ว
+    ถ้านักแข่งคนนี้ไม่ได้ลงแข่งใน session นั้น (เช่น ถูกเปลี่ยนตัวออกก่อนจบฤดูกาล) จะ fallback
+    ไปดึงแบบไม่ผูก session (ทีม/เบอร์รถล่าสุดเท่าที่ OpenF1 มี) แทนที่จะคืน None ไปเลย"""
+    try:
+        params = {"name_acronym": code}
+        if session_key is not None:
+            params["session_key"] = session_key
+        r = requests.get("https://api.openf1.org/v1/drivers",
+                          params=params, headers=UA, timeout=15)
+        rows = r.json() if r.status_code == 200 else []
+        if not rows and session_key is not None:
+            print(f"  {code} ไม่อยู่ใน session ท้ายฤดูกาล (คงถูกเปลี่ยนตัวออกก่อนจบซีซั่น) — ใช้ทีมล่าสุดแทน")
+            r = requests.get("https://api.openf1.org/v1/drivers",
+                              params={"name_acronym": code}, headers=UA, timeout=15)
+            r.raise_for_status()
+            rows = r.json()
         if not rows:
             return None
         last = rows[-1]
@@ -205,10 +236,14 @@ def main():
 
     print(f"ฤดูกาล {season}: นักแข่ง {len(drivers)} คน, สนาม {len(circuits)} สนาม")
 
+    finale_key = _season_finale_session_key(season)
+    if finale_key is None:
+        print(f"  ⚠ ผูก metadata กับฤดูกาล {season} ไม่ได้ จะใช้ทีม/เบอร์รถล่าสุดข้ามฤดูกาลแทน")
+
     meta_list = []
     for code in sorted(drivers):
         fetch_driver_photo(code, season=season)
-        meta = fetch_driver_meta(code)
+        meta = fetch_driver_meta(code, session_key=finale_key)
         if meta:
             meta_list.append(meta)
         time.sleep(0.3)
