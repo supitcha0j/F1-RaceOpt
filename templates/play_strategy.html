@@ -359,9 +359,9 @@
     var canvas = document.getElementById("posChart");
     if (!canvas || !window.Chart) return;
 
-    var INK   = "#E9EDF4";
-    var MUTED = "#67718A";
-    var GRID  = "rgba(255,255,255,0.05)";
+    var INK   = "#14161C";
+    var MUTED = "#565B6B";
+    var GRID  = "rgba(11,14,19,0.06)";
     var MONO  = "'IBM Plex Mono', ui-monospace, monospace";
     var BRAND = "#E0143C";
 
@@ -418,8 +418,8 @@
         plugins: {
           legend: { display: false },
           tooltip: {
-            backgroundColor: "#070911", borderColor: "#323C51", borderWidth: 1,
-            titleColor: INK, bodyColor: INK, cornerRadius: 3, padding: 10,
+            backgroundColor: "#0B0E13", borderColor: "#2A2E3A", borderWidth: 1,
+            titleColor: "#F2F3F6", bodyColor: "#F2F3F6", cornerRadius: 3, padding: 10,
             titleFont: { family: MONO, size: 10 }, bodyFont: { family: MONO, size: 11 },
             callbacks: {
               title: function (items) { return "LAP " + items[0].label; },
@@ -432,14 +432,14 @@
             title: { display: true, text: "LAP", color: MUTED, font: { family: MONO, size: 10 } },
             ticks: { color: MUTED, maxRotation: 0, autoSkipPadding: 16, font: { family: MONO, size: 10 } },
             grid: { color: GRID, drawTicks: false },
-            border: { color: "#323C51" },
+            border: { color: "#D3D6DC" },
           },
           y: {
             reverse: true, min: 1, max: progress.field_size,
             ticks: { color: MUTED, stepSize: 1, font: { family: MONO, size: 10 }, callback: function (v) { return "P" + v; } },
             title: { display: true, text: "POSITION", color: MUTED, font: { family: MONO, size: 10 } },
             grid: { color: GRID, drawTicks: false },
-            border: { color: "#323C51" },
+            border: { color: "#D3D6DC" },
           },
         },
       },
@@ -596,7 +596,7 @@
       return { bestGain: bestGain, bestGainLap: bestGainLap, overtakes: overtakes, longestHold: longestHold, holdPos: holdPos };
     }
     function spawnConfetti() {
-      var colors = ["#E0143C", "#FFB020", "#B4FF39", "#E4E8F0"];
+      var colors = ["#E0143C", "#FFB020", "#7CCB3D", "#3A3F4B"];
       for (var i = 0; i < 28; i++) {
         var piece = document.createElement("span");
         piece.className = "confetti-piece";

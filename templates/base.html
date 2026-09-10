@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="color-scheme" content="dark" />
+    <meta name="color-scheme" content="light" />
     <title>{% block title %}RaceOpt · F1 Strategy{% endblock %}</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -15,36 +15,48 @@
          RaceOpt — motorsport engineering design tokens
       ───────────────────────────────────────────── */
       :root {
-        /* Deep navy-charcoal neutrals — cool undertone, deliberately not F1's
-           near-black/white broadcast palette */
-        --bg:        #0B0E13;
-        --bg-sunk:   #070911;
-        --surface:   #121722;
-        --surface-2: #171D2A;
-        --line:      #232B3B;
-        --line-2:    #323C51;
-        --fg:        #E9EDF4;
-        --fg-2:      #99A3B8;
-        --fg-3:      #67718A;
+        /* Light broadcast-style canvas — bright, high-contrast, editorial.
+           Adapted from official F1 broadcast layout conventions but kept on
+           RaceOpt's own palette (see --brand below), not F1's exact red. */
+        --bg:        #FFFFFF;
+        --bg-sunk:   #F3F4F6;
+        --surface:   #FFFFFF;
+        --surface-2: #F0F1F4;
+        --line:      #E4E6EA;
+        --line-2:    #D3D6DC;
+        --fg:        #14161C;
+        --fg-2:      #565B6B;
+        --fg-3:      #8A8FA0;
+
+        /* Structural chrome (nav / footer / feature bands) stays near-black,
+           bookending the light content — the same rhythm as the reference. */
+        --ink:       #0B0E13;
+        --ink-2:     #14171F;
+        --ink-3:     #1D212B;
+        --ink-line:  #2A2E3A;
+        --on-ink:    #F2F3F6;
+        --on-ink-2:  #9AA0B2;
+        --on-ink-3:  #6B7180;
 
         /* Crimson red — primary brand/telemetry accent. Deliberately a cooler,
            more magenta-leaning red than F1's official red (#E10600) so it reads
            as "motorsport red" rather than a brand color match. */
         --brand:      #E0143C;
         --brand-hi:   #FF3A5C;
-        --brand-wash: rgba(224, 20, 60, 0.10);
+        --brand-wash: rgba(224, 20, 60, 0.08);
 
-        /* Amber + acid lime — reserved for important data readouts, never structural chrome */
-        --amber:     #FFB020;
-        --lime:      #B4FF39;
+        /* Amber + acid lime — reserved for important data readouts, never structural chrome.
+           Deepened versus the old dark-theme values so they stay legible as text on white. */
+        --amber:     #B15900;
+        --lime:      #7CCB3D;
 
-        --gain:      #B4FF39;
-        --warn:      #FFB020;
-        --bad:       #FF5C72;
+        --gain:      #167A46;
+        --warn:      #B15900;
+        --bad:       #C41E3A;
 
-        --soft:      #FF5C72;
-        --medium:    #FFC94D;
-        --hard:      #E4E8F0;
+        --soft:      #D6293F;
+        --medium:    #C2760A;
+        --hard:      #4B5063;
 
         --sans:    "IBM Plex Sans Thai", system-ui, -apple-system, "Segoe UI", sans-serif;
         --mono:    "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
@@ -122,9 +134,10 @@
         position: sticky;
         top: 0;
         z-index: 30;
-        background: rgba(11, 14, 19, 0.94);
+        background: rgba(11, 14, 19, 0.96);
         backdrop-filter: blur(8px);
-        border-bottom: 1px solid var(--line);
+        border-bottom: 1px solid var(--ink-line);
+        color: var(--on-ink);
       }
       .nav-inner {
         max-width: 1180px;
@@ -157,7 +170,7 @@
       .brand-sub {
         font: 400 11px/1 var(--mono);
         letter-spacing: 0.08em;
-        color: var(--fg-3);
+        color: var(--on-ink-2);
         text-transform: uppercase;
       }
       .tabs {
@@ -173,7 +186,7 @@
         flex: 0 0 auto;
         padding: 9px 14px;
         border-bottom: 2px solid transparent;
-        color: var(--fg-3);
+        color: var(--on-ink-2);
         font: 500 11.5px/1 var(--mono);
         letter-spacing: 0.1em;
         text-transform: uppercase;
@@ -181,8 +194,8 @@
         white-space: nowrap;
         transition: color 0.12s ease, border-color 0.12s ease;
       }
-      .tab:hover { color: var(--fg); }
-      .tab[aria-current="page"] { color: var(--fg); border-bottom-color: var(--brand); }
+      .tab:hover { color: var(--on-ink); }
+      .tab[aria-current="page"] { color: var(--on-ink); border-bottom-color: var(--brand); }
 
       @media (min-width: 720px) {
         .nav-inner { flex-direction: row; align-items: center; justify-content: space-between; gap: 24px; }
@@ -371,7 +384,7 @@
         white-space: nowrap;
       }
       table.tbl tbody tr:last-child td { border-bottom: 0; }
-      table.tbl tbody tr:hover td { background: rgba(255, 255, 255, 0.022); }
+      table.tbl tbody tr:hover td { background: rgba(11, 14, 19, 0.028); }
       table.tbl tfoot td {
         border-top: 1px solid var(--line-2);
         border-bottom: 0;
@@ -403,9 +416,9 @@
         font: 600 10.5px/1 var(--mono);
         vertical-align: -4px;
       }
-      .cmp-soft   { color: var(--soft); }
-      .cmp-medium { color: var(--medium); }
-      .cmp-hard   { color: var(--hard); }
+      .cmp-soft   { color: var(--soft);   background: rgba(214, 41, 63, 0.08); }
+      .cmp-medium { color: var(--medium); background: rgba(194, 118, 10, 0.10); }
+      .cmp-hard   { color: var(--hard);   background: rgba(75, 80, 99, 0.08); }
       .seq { display: inline-flex; align-items: center; gap: 5px; }
       .seq-arrow { color: var(--fg-3); font: 400 11px/1 var(--mono); }
       .seq-text { font: 500 12px/1 var(--mono); letter-spacing: 0.04em; color: var(--fg-2); }
@@ -423,7 +436,7 @@
         white-space: nowrap;
       }
       .pill-undercut { color: var(--brand); background: var(--brand-wash); }
-      .pill-overcut  { color: var(--amber); background: rgba(255, 176, 32, 0.10); }
+      .pill-overcut  { color: var(--amber); background: rgba(177, 89, 0, 0.10); }
       .pill-neutral  { color: var(--fg-3); background: var(--surface-2); }
 
       /* ── Stint bar: the strategy read at a glance ── */
@@ -677,24 +690,40 @@
       }
       .divider-flag .chk { margin-left: auto; }
 
-      /* ── Hero (entry page only) ─────────────────── */
+      /* ── Hero (entry page only) — light content / dark photo split,
+         matching the official-broadcast layout: bold text on white next
+         to a full-bleed car photo panel ─────────────────────────────── */
       .hero {
         position: relative;
         overflow: hidden;
         border: 1px solid var(--line);
         border-radius: var(--r);
-        clip-path: polygon(0 0, 100% 0, 100% calc(100% - 22px), calc(100% - 22px) 100%, 0 100%);
-        padding: clamp(28px, 5vw, 48px) clamp(20px, 4vw, 40px);
+        background: var(--surface);
       }
       .hero.hero-photo {
         display: flex;
-        flex-direction: column;
-        min-height: clamp(440px, 52vw, 640px);
+        flex-direction: column-reverse;
+      }
+      @media (min-width: 900px) {
+        .hero.hero-photo {
+          flex-direction: row;
+          min-height: clamp(440px, 44vw, 620px);
+        }
       }
       .hero-media {
-        position: absolute;
-        inset: 0;
-        z-index: 0;
+        position: relative;
+        flex: 0 0 auto;
+        width: 100%;
+        height: clamp(200px, 42vw, 320px);
+        overflow: hidden;
+        background: var(--ink);
+      }
+      @media (min-width: 900px) {
+        .hero-media {
+          width: 46%;
+          height: auto;
+          clip-path: polygon(0 0, 100% 0, calc(100% - 40px) 100%, 0 100%);
+        }
       }
       .hero-media img {
         width: 100%;
@@ -713,35 +742,17 @@
         position: absolute;
         inset: 0;
         background:
-          linear-gradient(185deg, rgba(7, 9, 17, 0.05) 0%, rgba(7, 9, 17, 0.32) 46%, rgba(7, 9, 17, 0.93) 82%, var(--bg-sunk) 100%),
-          linear-gradient(100deg, rgba(7, 9, 17, 0.9) 0%, rgba(7, 9, 17, 0.52) 34%, rgba(7, 9, 17, 0) 60%);
-      }
-      /* Animated neon glow border on hero */
-      .hero::before {
-        content: "";
-        position: absolute;
-        inset: -2px;
-        z-index: 2;
-        border-radius: var(--r);
-        background: linear-gradient(90deg, var(--brand), var(--amber), var(--brand-hi), var(--brand));
-        background-size: 300% 100%;
-        animation: borderGlow 4s linear infinite;
-        mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
-        -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
-        mask-composite: exclude;
-        -webkit-mask-composite: xor;
-        padding: 1px;
-        pointer-events: none;
-        opacity: 0.6;
-      }
-      @keyframes borderGlow {
-        0%   { background-position: 0% 50%; }
-        100% { background-position: 300% 50%; }
+          linear-gradient(0deg, rgba(11, 14, 19, 0.55) 0%, rgba(11, 14, 19, 0) 45%),
+          linear-gradient(100deg, rgba(11, 14, 19, 0.1) 0%, rgba(11, 14, 19, 0.45) 70%, rgba(11, 14, 19, 0.85) 100%);
       }
       .hero-content {
         position: relative;
         z-index: 1;
-        margin-top: auto;
+        flex: 1 1 auto;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        padding: clamp(28px, 5vw, 48px) clamp(20px, 4vw, 40px);
         width: 100%;
       }
       .hero-headline {
@@ -754,7 +765,6 @@
         position: relative;
         color: var(--brand);
         white-space: nowrap;
-        text-shadow: 0 0 30px rgba(224, 20, 60, 0.4), 0 0 60px rgba(224, 20, 60, 0.15);
       }
       .hero-bar {
         display: inline-block;
@@ -763,12 +773,11 @@
         background: var(--brand);
         transform: skewX(-25deg);
         margin-bottom: 14px;
-        box-shadow: 0 0 12px rgba(224, 20, 60, 0.6), 0 0 30px rgba(224, 20, 60, 0.2);
       }
       .hero-lede { margin-top: 14px; max-width: 56ch; color: var(--fg-2); font-size: 14.5px; }
       .hero-actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 24px; }
 
-      /* ── Floating particles system ────────────────── */
+      /* ── Floating particles system (confined to the dark hero-media panel) ── */
       .particles {
         position: absolute;
         inset: 0;
@@ -780,13 +789,13 @@
         position: absolute;
         width: 2px;
         height: 2px;
-        background: var(--brand);
+        background: var(--brand-hi);
         border-radius: 50%;
         box-shadow: 0 0 6px rgba(224, 20, 60, 0.6), 0 0 12px rgba(224, 20, 60, 0.3);
         animation: particleFloat linear infinite;
       }
-      .particle:nth-child(2n) { background: var(--amber); box-shadow: 0 0 6px rgba(255, 176, 32, 0.5); }
-      .particle:nth-child(3n) { background: var(--lime); box-shadow: 0 0 6px rgba(180, 255, 57, 0.4); width: 1px; height: 1px; }
+      .particle:nth-child(2n) { background: #FFB020; box-shadow: 0 0 6px rgba(255, 176, 32, 0.5); }
+      .particle:nth-child(3n) { background: #B4FF39; box-shadow: 0 0 6px rgba(180, 255, 57, 0.4); width: 1px; height: 1px; }
       @keyframes particleFloat {
         0%   { transform: translate(0, 0) scale(1); opacity: 0; }
         10%  { opacity: 1; }
@@ -806,7 +815,7 @@
       }
       .card-3d:hover > .panel {
         transform: rotateX(-2deg) rotateY(3deg) translateZ(8px);
-        box-shadow: -6px 8px 24px rgba(0, 0, 0, 0.35), 0 0 1px rgba(224, 20, 60, 0.2);
+        box-shadow: -6px 8px 24px rgba(11, 14, 19, 0.14), 0 0 1px rgba(224, 20, 60, 0.2);
       }
 
       /* ── Driver avatar (real headshot, OpenF1) ────── */
@@ -842,11 +851,13 @@
         content: "";
         position: absolute;
         inset: 0;
-        background: linear-gradient(180deg, rgba(7, 9, 17, 0) 55%, rgba(7, 9, 17, 0.55) 100%);
+        background: linear-gradient(180deg, rgba(11, 14, 19, 0) 55%, rgba(11, 14, 19, 0.55) 100%);
       }
       .hoverable:hover .card-media img { transform: scale(1.06); }
 
-      /* ── Section with 3D image background ─────────── */
+      /* ── Section with photo background — faded photo behind a light,
+         frosted content card (kept light so nested panels/tables/text
+         stay legible; only nav/footer/feature band go to full black) ── */
       .section-visual {
         position: relative;
         overflow: hidden;
@@ -863,19 +874,22 @@
         height: 100%;
         object-fit: cover;
         display: block;
-        opacity: 0.25;
-        filter: blur(1px) saturate(1.3);
+        opacity: 0.16;
+        filter: blur(1px) saturate(1.15);
         transition: transform 0.6s var(--ease-out), opacity 0.6s ease;
       }
       .section-visual:hover .section-visual-bg img {
         transform: scale(1.04);
-        opacity: 0.35;
+        opacity: 0.22;
       }
       .section-visual-content {
         position: relative;
         z-index: 1;
         padding: clamp(20px, 3vw, 36px);
-        background: linear-gradient(135deg, rgba(18, 23, 34, 0.92), rgba(11, 14, 19, 0.96));
+        background: linear-gradient(135deg, rgba(255, 255, 255, 0.93), rgba(243, 244, 246, 0.97));
+        border: 1px solid var(--line);
+        border-radius: var(--r);
+        box-shadow: 0 1px 2px rgba(11, 14, 19, 0.04);
         backdrop-filter: blur(12px);
         -webkit-backdrop-filter: blur(12px);
       }
@@ -950,15 +964,15 @@
 
       /* ── Glassmorphism panel variant ──────────────── */
       .panel.glass {
-        background: rgba(18, 23, 34, 0.7);
+        background: rgba(255, 255, 255, 0.72);
         backdrop-filter: blur(16px) saturate(1.4);
         -webkit-backdrop-filter: blur(16px) saturate(1.4);
-        border: 1px solid rgba(255, 255, 255, 0.08);
-        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        border: 1px solid rgba(11, 14, 19, 0.08);
+        box-shadow: 0 8px 32px rgba(11, 14, 19, 0.08);
       }
       .panel.glass:hover {
-        border-color: rgba(224, 20, 60, 0.2);
-        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(224, 20, 60, 0.1);
+        border-color: rgba(224, 20, 60, 0.25);
+        box-shadow: 0 8px 32px rgba(11, 14, 19, 0.1), 0 0 0 1px rgba(224, 20, 60, 0.12);
       }
 
       /* ── Shimmer / loading glow effect ────────────── */
@@ -984,7 +998,7 @@
 
       /* ── Animated gradient text ───────────────────── */
       .gradient-text {
-        background: linear-gradient(90deg, var(--brand), var(--amber), var(--brand-hi), var(--brand));
+        background: linear-gradient(90deg, var(--brand), var(--brand-hi), var(--brand));
         background-size: 300% auto;
         -webkit-background-clip: text;
         background-clip: text;
@@ -1099,6 +1113,69 @@
       a.panel.card-link { display: flex; flex-direction: column; text-decoration: none; }
       .card-link .panel-body { flex: 1 1 auto; }
 
+      /* ── Feature band: full-black quick-link grid ─────────
+         The one deliberately-black content section, echoing the
+         reference layout's "key elements" block against RaceOpt's
+         own light theme everywhere else. ── */
+      .feature-band {
+        background: var(--ink);
+        color: var(--on-ink);
+        border-radius: var(--r);
+        padding: clamp(24px, 4vw, 40px);
+      }
+      .feature-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 14px;
+        margin-bottom: 20px;
+      }
+      .feature-title {
+        font: 700 clamp(20px, 3vw, 27px)/1.15 var(--display);
+        text-transform: uppercase;
+        letter-spacing: 0.001em;
+        color: var(--on-ink);
+      }
+      .feature-grid {
+        display: grid;
+        gap: 1px;
+        grid-template-columns: 1fr;
+        background: var(--ink-line);
+        border: 1px solid var(--ink-line);
+        border-radius: var(--r);
+        overflow: hidden;
+      }
+      @media (min-width: 640px) { .feature-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+      @media (min-width: 980px) { .feature-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+      .feature-card {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        padding: 20px 18px;
+        background: var(--ink-2);
+        color: inherit;
+        text-decoration: none;
+        transition: background 0.15s ease;
+      }
+      .feature-card:hover { background: var(--ink-3); }
+      .feature-card-icon {
+        width: 30px;
+        height: 30px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--brand-hi);
+      }
+      .feature-card-icon svg { width: 22px; height: 22px; }
+      .feature-card-title {
+        font: 600 13.5px/1.3 var(--display);
+        text-transform: uppercase;
+        letter-spacing: 0.01em;
+        color: var(--on-ink);
+      }
+      .feature-card-desc { font-size: 12px; line-height: 1.6; color: var(--on-ink-2); }
+
       /* ── Race replay (Strategy Lab — position by lap) ───── */
       .replay-hud {
         display: flex;
@@ -1111,8 +1188,8 @@
       .replay-pos-num { font: 700 clamp(30px, 5vw, 42px)/1 var(--mono); letter-spacing: -0.02em; }
       .replay-pos-num.flash-ok  { animation: replayFlashOk 0.6s var(--ease-out); }
       .replay-pos-num.flash-bad { animation: replayFlashBad 0.6s var(--ease-out); }
-      @keyframes replayFlashOk  { 0% { color: var(--gain); text-shadow: 0 0 8px rgba(180,255,57,0.35); } 100% { color: var(--fg); text-shadow: none; } }
-      @keyframes replayFlashBad { 0% { color: var(--bad);  text-shadow: 0 0 8px rgba(255,92,114,0.35); } 100% { color: var(--fg); text-shadow: none; } }
+      @keyframes replayFlashOk  { 0% { color: var(--gain); text-shadow: 0 0 8px rgba(22,122,70,0.3); } 100% { color: var(--fg); text-shadow: none; } }
+      @keyframes replayFlashBad { 0% { color: var(--bad);  text-shadow: 0 0 8px rgba(196,30,58,0.3); } 100% { color: var(--fg); text-shadow: none; } }
 
       .replay-pos-delta { font: 600 13px/1 var(--mono); opacity: 0; min-width: 3.5ch; }
       .replay-pos-delta.show { animation: replayPop 1.4s var(--ease-out) both; }
@@ -1263,8 +1340,8 @@
         to   { transform: translateY(220px) rotate(540deg); opacity: 0; }
       }
 
-      /* ── Footer ────────────────────────────────── */
-      .foot { border-top: 1px solid var(--line); background: var(--bg-sunk); }
+      /* ── Footer (dark ink band, bookends the nav) ─── */
+      .foot { border-top: 1px solid var(--ink-line); background: var(--ink); color: var(--on-ink); }
       .foot-inner {
         max-width: 1180px;
         margin: 0 auto;
@@ -1275,7 +1352,7 @@
         font: 400 11px/1.6 var(--mono);
         letter-spacing: 0.06em;
         text-transform: uppercase;
-        color: var(--fg-3);
+        color: var(--on-ink-2);
       }
       .foot-disclaimer {
         padding-top: 0;
@@ -1286,7 +1363,7 @@
         max-width: 84ch;
         font-size: 11px;
         line-height: 1.7;
-        color: var(--fg-3);
+        color: var(--on-ink-3);
       }
 
       .sr-only {

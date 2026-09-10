@@ -42,16 +42,16 @@
   <div class="hero-media">
     <img src="{{ url_for('static', filename='img/hero-car.jpg') }}" alt=""
          width="1400" height="900" loading="eager" decoding="async" />
-  </div>
-  <!-- Floating particle sparks -->
-  <div class="particles" aria-hidden="true"></div>
-  <!-- Animated speed lines -->
-  <div class="speed-lines" aria-hidden="true">
-    <span class="speed-line" style="top:18%; width:120px; animation-delay:0s; animation-duration:1.8s;"></span>
-    <span class="speed-line" style="top:32%; width:200px; animation-delay:0.6s; animation-duration:2.2s;"></span>
-    <span class="speed-line" style="top:55%; width:160px; animation-delay:1.2s; animation-duration:1.5s;"></span>
-    <span class="speed-line" style="top:71%; width:90px; animation-delay:0.3s; animation-duration:2.8s;"></span>
-    <span class="speed-line" style="top:85%; width:140px; animation-delay:1.8s; animation-duration:2s;"></span>
+    <!-- Floating particle sparks -->
+    <div class="particles" aria-hidden="true"></div>
+    <!-- Animated speed lines -->
+    <div class="speed-lines" aria-hidden="true">
+      <span class="speed-line" style="top:18%; width:120px; animation-delay:0s; animation-duration:1.8s;"></span>
+      <span class="speed-line" style="top:32%; width:200px; animation-delay:0.6s; animation-duration:2.2s;"></span>
+      <span class="speed-line" style="top:55%; width:160px; animation-delay:1.2s; animation-duration:1.5s;"></span>
+      <span class="speed-line" style="top:71%; width:90px; animation-delay:0.3s; animation-duration:2.8s;"></span>
+      <span class="speed-line" style="top:85%; width:140px; animation-delay:1.8s; animation-duration:2s;"></span>
+    </div>
   </div>
   <div class="hero-content">
     <span class="hero-bar" aria-hidden="true"></span>
@@ -109,6 +109,47 @@
         <svg class="btn-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
       </a>
     </div>
+  </div>
+</section>
+
+<!-- ═══ Quick links — key modules of the tool ═══════════════ -->
+<section class="feature-band" aria-labelledby="feat-h">
+  <div class="feature-head">
+    <h2 class="feature-title" id="feat-h">Key modules</h2>
+    <a class="btn" href="{{ url_for('analysis_page') }}">
+      เริ่มวิเคราะห์
+      <svg class="btn-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+    </a>
+  </div>
+  <div class="feature-grid">
+    <a class="feature-card" href="{{ url_for('analysis_page') }}">
+      <span class="feature-card-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 15l3-4 4 3 5-7"/></svg>
+      </span>
+      <span class="feature-card-title">Strategy Analysis</span>
+      <span class="feature-card-desc">Grid search กลยุทธ์ยาง/พิทจาก telemetry จริง พร้อม undercut/overcut</span>
+    </a>
+    <a class="feature-card" href="{{ url_for('play_strategy_page') }}">
+      <span class="feature-card-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 21V14M4 10V3M12 21V12M12 8V3M20 21V16M20 12V3M1 14h6M9 8h6M17 16h6"/></svg>
+      </span>
+      <span class="feature-card-title">Strategy Lab</span>
+      <span class="feature-card-desc">จำลองกลยุทธ์ของคุณเองแข่งกับทั้งกริด พร้อม replay รายรอบ</span>
+    </a>
+    <a class="feature-card" href="{{ url_for('drivers_page') }}">
+      <span class="feature-card-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-8 8-8s8 3.6 8 8"/></svg>
+      </span>
+      <span class="feature-card-title">Drivers</span>
+      <span class="feature-card-desc">โปรไฟล์นักแข่งทั้ง 20 คน พร้อมทุกสนามที่วิเคราะห์ได้</span>
+    </a>
+    <a class="feature-card" href="{{ url_for('teams_page') }}">
+      <span class="feature-card-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      </span>
+      <span class="feature-card-title">Teams</span>
+      <span class="feature-card-desc">ทีมทั้ง 10 ทีมและนักแข่งในสังกัด จัดกลุ่มตามสี team colour</span>
+    </a>
   </div>
 </section>
 
@@ -200,7 +241,7 @@
     <div class="panel-body">
       <div class="chart h-md"><canvas id="homeLapChart"></canvas></div>
       <div class="legend" style="margin-top: 12px">
-        <span><i style="background: #AEB8CC"></i>เวลาจริง (FastF1)</span>
+        <span><i style="background: #565B6B"></i>เวลาจริง (FastF1)</span>
         <span><i style="background: #E0143C"></i>เวลาที่โมเดลทำนาย</span>
       </div>
     </div>
@@ -533,9 +574,9 @@
   const actualLaps = JSON.parse('{{ analysis.actual_laps | tojson | safe }}');
   const predLaps   = JSON.parse('{{ analysis.pred_laps   | tojson | safe }}');
 
-  const INK   = "#E9EDF4";
-  const MUTED = "#67718A";
-  const GRID  = "rgba(255,255,255,0.05)";
+  const INK   = "#14161C";
+  const MUTED = "#565B6B";
+  const GRID  = "rgba(11,14,19,0.06)";
   const MONO  = "'IBM Plex Mono', ui-monospace, monospace";
 
   Chart.defaults.font.family = MONO;
@@ -550,8 +591,8 @@
         {
           label: "จริง",
           data: actualLaps,
-          borderColor: "#AEB8CC",
-          backgroundColor: "#AEB8CC",
+          borderColor: "#565B6B",
+          backgroundColor: "#565B6B",
           borderWidth: 1.5, tension: 0, pointRadius: 0, pointHitRadius: 8,
         },
         {
@@ -570,11 +611,11 @@
       plugins: {
         legend: { display: false },
         tooltip: {
-          backgroundColor: "#070911",
-          borderColor: "#323C51",
+          backgroundColor: "#0B0E13",
+          borderColor: "#2A2E3A",
           borderWidth: 1,
-          titleColor: INK,
-          bodyColor: INK,
+          titleColor: "#F2F3F6",
+          bodyColor: "#F2F3F6",
           cornerRadius: 3,
           padding: 10,
           displayColors: false,
@@ -591,13 +632,13 @@
           title: { display: true, text: "LAP", color: MUTED, font: { size: 10 } },
           ticks: { color: MUTED, maxRotation: 0, autoSkipPadding: 16 },
           grid: { color: GRID, drawTicks: false },
-          border: { color: "#323C51" },
+          border: { color: "#D3D6DC" },
         },
         y: {
           title: { display: true, text: "LAP TIME (S)", color: MUTED, font: { size: 10 } },
           ticks: { color: MUTED },
           grid: { color: GRID, drawTicks: false },
-          border: { color: "#323C51" },
+          border: { color: "#D3D6DC" },
         },
       },
     },

@@ -337,7 +337,7 @@
     <div class="panel-body">
       <div class="chart h-md"><canvas id="lapChart"></canvas></div>
       <div class="legend" style="margin-top: 12px">
-        <span><i style="background: #AEB8CC"></i>เวลาจริง (FastF1)</span>
+        <span><i style="background: #565B6B"></i>เวลาจริง (FastF1)</span>
         <span><i style="background: #E0143C"></i>เวลาที่โมเดลทำนาย</span>
       </div>
     </div>
@@ -362,9 +362,9 @@
   const actualLaps = JSON.parse('{{ actual_laps | tojson | safe }}');
   const predLaps   = JSON.parse('{{ pred_laps   | tojson | safe }}');
 
-  const INK   = "#E9EDF4";
-  const MUTED = "#67718A";
-  const GRID  = "rgba(255,255,255,0.05)";
+  const INK   = "#14161C";
+  const MUTED = "#565B6B";
+  const GRID  = "rgba(11,14,19,0.06)";
   const MONO  = "'IBM Plex Mono', ui-monospace, monospace";
 
   Chart.defaults.font.family = MONO;
@@ -379,8 +379,8 @@
         {
           label: "จริง",
           data: actualLaps,
-          borderColor: "#AEB8CC",
-          backgroundColor: "#AEB8CC",
+          borderColor: "#565B6B",
+          backgroundColor: "#565B6B",
           borderWidth: 1.5, tension: 0, pointRadius: 0, pointHitRadius: 8,
         },
         {
@@ -399,11 +399,11 @@
       plugins: {
         legend: { display: false },
         tooltip: {
-          backgroundColor: "#070911",
-          borderColor: "#323C51",
+          backgroundColor: "#0B0E13",
+          borderColor: "#2A2E3A",
           borderWidth: 1,
-          titleColor: INK,
-          bodyColor: INK,
+          titleColor: "#F2F3F6",
+          bodyColor: "#F2F3F6",
           cornerRadius: 3,
           padding: 10,
           displayColors: false,
@@ -420,13 +420,13 @@
           title: { display: true, text: "LAP", color: MUTED, font: { size: 10 } },
           ticks: { color: MUTED, maxRotation: 0, autoSkipPadding: 16 },
           grid: { color: GRID, drawTicks: false },
-          border: { color: "#323C51" },
+          border: { color: "#D3D6DC" },
         },
         y: {
           title: { display: true, text: "LAP TIME (S)", color: MUTED, font: { size: 10 } },
           ticks: { color: MUTED },
           grid: { color: GRID, drawTicks: false },
-          border: { color: "#323C51" },
+          border: { color: "#D3D6DC" },
         },
       },
     },

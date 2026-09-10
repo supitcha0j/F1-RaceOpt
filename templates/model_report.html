@@ -75,7 +75,7 @@
     <div class="panel-body">
       <div class="chart h-lg"><canvas id="realVsSimLine"></canvas></div>
       <div class="legend" style="margin-top: 12px">
-        <span><i style="background: #AEB8CC"></i>เวลาจริง (FastF1)</span>
+        <span><i style="background: #565B6B"></i>เวลาจริง (FastF1)</span>
         <span><i style="background: #E0143C"></i>เวลาจำลอง (โมเดล)</span>
       </div>
     </div>
@@ -89,9 +89,9 @@
     <div class="panel-body">
       <div class="chart h-sm"><canvas id="diffPctLine"></canvas></div>
       <div class="legend" style="margin-top: 12px">
-        <span><i style="background: #B4FF39"></i>ต่างน้อยกว่า 1%</span>
-        <span><i style="background: #FFB020"></i>1–3%</span>
-        <span><i style="background: #FF5C72"></i>มากกว่า 3%</span>
+        <span><i style="background: #167A46"></i>ต่างน้อยกว่า 1%</span>
+        <span><i style="background: #B15900"></i>1–3%</span>
+        <span><i style="background: #C41E3A"></i>มากกว่า 3%</span>
       </div>
     </div>
   </div>
@@ -311,12 +311,12 @@ document.addEventListener('DOMContentLoaded', function () {
   const sims   = combos.map(c => c.sim_total);
   const diffs  = combos.map(c => c.diff_pct);
 
-  const INK   = "#E9EDF4";
-  const MUTED = "#67718A";
-  const LINE  = "#323C51";
-  const GRID  = "rgba(255,255,255,0.05)";
+  const INK   = "#14161C";
+  const MUTED = "#565B6B";
+  const LINE  = "#D3D6DC";
+  const GRID  = "rgba(11,14,19,0.06)";
   const MONO  = "'IBM Plex Mono', ui-monospace, monospace";
-  const STEEL = "#AEB8CC";
+  const STEEL = "#565B6B";
   const RED   = "#E0143C";
 
   Chart.defaults.font.family = MONO;
@@ -327,14 +327,14 @@ document.addEventListener('DOMContentLoaded', function () {
     const h = Math.floor(v / 3600), m = Math.floor((v % 3600) / 60), s = Math.floor(v % 60);
     return `${h}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
   };
-  const tolColor = d => Math.abs(d) < 1 ? "#B4FF39" : Math.abs(d) < 3 ? "#FFB020" : "#FF5C72";
+  const tolColor = d => Math.abs(d) < 1 ? "#167A46" : Math.abs(d) < 3 ? "#B15900" : "#C41E3A";
 
   const tooltipStyle = {
-    backgroundColor: "#070911",
-    borderColor: LINE,
+    backgroundColor: "#0B0E13",
+    borderColor: "#2A2E3A",
     borderWidth: 1,
-    titleColor: INK,
-    bodyColor: INK,
+    titleColor: "#F2F3F6",
+    bodyColor: "#F2F3F6",
     cornerRadius: 3,
     padding: 10,
     displayColors: false,

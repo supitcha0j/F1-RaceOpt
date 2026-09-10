@@ -13,7 +13,10 @@
       <h1 class="page-title" style="margin-top: 0">{{ driver.full_name }}</h1>
       <p class="lede" style="margin-top: 4px">
         {{ driver.code }} · #{{ driver.driver_number }} ·
-        <span style="color: #{{ driver.team_colour }}">{{ driver.team_name }}</span>
+        <span style="display: inline-flex; align-items: center; gap: 6px">
+          <span aria-hidden="true" style="width: 10px; height: 10px; border-radius: 50%; background: #{{ driver.team_colour }}; flex: 0 0 auto"></span>
+          {{ driver.team_name }}
+        </span>
       </p>
     </div>
   </div>
