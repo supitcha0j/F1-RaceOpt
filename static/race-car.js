@@ -84,6 +84,15 @@
   }
   function resize() { const r=canvas.getBoundingClientRect(),dpr=Math.min(devicePixelRatio||1,2); width=r.width;height=r.height;canvas.width=width*dpr;canvas.height=height*dpr;ctx.setTransform(dpr,0,0,dpr,0,0);draw(); }
   new ResizeObserver(resize).observe(canvas);
+  // Measure the actual navigation height, including wrapped mobile menus.
+  const nav=document.querySelector('.nav');
+  const scene=canvas.closest('.race-stage');
+  if(nav&&scene) {
+    const updateHeader=()=>scene.style.setProperty('--header-height',
+      `${nav.getBoundingClientRect().height+(document.querySelector('.topline')?.getBoundingClientRect().height||0)}px`);
+    new ResizeObserver(updateHeader).observe(nav);
+    updateHeader();
+  }
   canvas.parentElement.classList.add('ready');
   const motion=matchMedia('(prefers-reduced-motion: reduce)');
   let paused=motion.matches,visible=true,frame=0,last=0;

@@ -245,10 +245,23 @@
           </div>
         </div>
 
-        <div class="replay-grid">
-          <div class="chart h-md">
-            <canvas id="posChart"></canvas>
+        <div class="race-replay" id="raceReplay">
+          <div class="race-replay-top">
+            <span class="race-replay-tag">RACE VISION <b>• STRATEGY REPLAY</b></span>
+            <button type="button" id="replayCamera" aria-label="เปลี่ยนเป็นมุมกล้องมุมสูง">มุมกล้อง: ไล่ตาม ↗</button>
           </div>
+          <div class="race-replay-scene">
+            <canvas id="raceReplayCanvas" role="img" aria-label="ภาพรถแข่งจำลองตามอันดับรายรอบ"></canvas>
+            <div class="race-replay-overlay"><span id="raceReplayStatus">พร้อมย้อนดูการแข่งขัน</span><strong id="raceReplayEvent">RACE FINISHED</strong></div>
+            <div class="race-replay-caption"><span class="race-replay-dot"></span> YOU · รถสีแดง <span>สนามจำลอง / ระยะรถสื่ออันดับ</span></div>
+          </div>
+        </div>
+        <p class="race-replay-note">{{ race_label }} · ภาพประกอบอันดับรายรอบ ไม่ใช่ตำแหน่งหรือระยะห่างจริงบนสนาม</p>
+        <div class="replay-grid race-replay-data">
+          <details class="race-replay-chart">
+            <summary>ดูกราฟอันดับรายรอบ</summary>
+            <div class="chart h-md"><canvas id="posChart"></canvas></div>
+          </details>
           <div class="replay-ladder" id="replayLadder" aria-label="กระดานอันดับสด"></div>
         </div>
 
@@ -349,6 +362,8 @@
   })();
 </script>
 {% if lap_progress %}
+<link rel="stylesheet" href="{{ url_for('static', filename='race-replay.css') }}" />
+<script src="{{ url_for('static', filename='race-replay.js') }}"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
   // กราฟ "อันดับตลอดการแข่ง" — replay ที่ค่อยๆ เปิดเผยอันดับทีละรอบ แทนที่จะ
@@ -359,7 +374,8 @@
     var reduceMotion = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
 
     var canvas = document.getElementById("posChart");
-    if (!canvas || !window.Chart) return;
+    if (!canvas) return;
+    var raceScene = window.createRaceReplay ? window.createRaceReplay(progress) : null;
 
     var INK   = "#14161C";
     var MUTED = "#565B6B";
@@ -408,7 +424,7 @@
       },
     };
 
-    var chart = new Chart(canvas.getContext("2d"), {
+    var chart = window.Chart ? new Chart(canvas.getContext("2d"), {
       type: "line",
       data: { labels: progress.labels, datasets: rivalDatasets.concat([userDataset]) },
       plugins: [playheadPlugin],
@@ -445,7 +461,7 @@
           },
         },
       },
-    });
+    }) : null;
 
     var lapNowEl  = document.getElementById("replayLapNow");
     var posNumEl  = document.getElementById("replayPosNum");
@@ -627,7 +643,7 @@
       if (podium && !reduceMotion) spawnConfetti();
     }
 
-    var BASE_INTERVAL = 220; // ms ต่อรอบ ที่ความเร็ว 1×
+    var BASE_INTERVAL = 1200; // ให้เห็นการเปลี่ยนอันดับและจังหวะเข้าพิตชัดเจน
     var speeds = [1, 2, 4];
     var speedIdx = 0;
     var timer = null;
@@ -642,9 +658,12 @@
         ds.data = maskTo(progress.rivals[i].positions, lap);
       });
       userDataset.data = maskTo(progress.user, lap);
-      chart.data.datasets = rivalDatasets.concat([userDataset]);
-      chart.$replayLap = lap;
-      chart.update(reduceMotion ? "none" : undefined);
+      if (chart) {
+        chart.data.datasets = rivalDatasets.concat([userDataset]);
+        chart.$replayLap = lap;
+        chart.update("none");
+      }
+      if (raceScene) raceScene.setLap(lap, timer ? BASE_INTERVAL / speeds[speedIdx] : 0);
       renderLadder(lap);
 
       var pos = progress.user[lap - 1];
@@ -668,6 +687,7 @@
     function stop() {
       clearInterval(timer);
       timer = null;
+      if (raceScene) raceScene.setPlaying(false);
       iconPlay.hidden = false;
       iconPause.hidden = true;
       playBtn.setAttribute("aria-label", "เล่นย้อนดูตั้งแต่ Lap 1");
@@ -692,6 +712,7 @@
       iconPause.hidden = false;
       playBtn.setAttribute("aria-label", "หยุดชั่วคราว");
       timer = setInterval(tick, BASE_INTERVAL / speeds[speedIdx]);
+      if (raceScene) raceScene.setPlaying(true, speeds[speedIdx]);
     }
 
     playBtn.addEventListener("click", function () {
@@ -700,13 +721,18 @@
     speedBtn.addEventListener("click", function () {
       speedIdx = (speedIdx + 1) % speeds.length;
       speedBtn.textContent = speeds[speedIdx] + "×";
+      if (raceScene) raceScene.setPlaying(Boolean(timer), speeds[speedIdx]);
       if (timer) { clearInterval(timer); timer = setInterval(tick, BASE_INTERVAL / speeds[speedIdx]); }
     });
     slider.addEventListener("input", function () {
       stop();
+      finishEl.hidden = true;
+      feedEl.innerHTML = "";
       render(parseInt(slider.value, 10));
     });
 
+    document.addEventListener("visibilitychange", function () { if (document.hidden) stop(); });
+    document.querySelector(".race-replay-chart").addEventListener("toggle", function () { if (chart) chart.resize(); });
     render(totalLaps);
   })();
 </script>

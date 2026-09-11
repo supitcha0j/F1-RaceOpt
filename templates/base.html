@@ -1386,10 +1386,15 @@
     <nav class="nav" aria-label="เมนูหลัก">
       <div class="nav-inner">
         <a class="brand" href="{{ url_for('index') }}">
-          <span class="brand-mark">RaceOpt</span>
+          <img class="brand-logo" src="{{ url_for('static', filename='img/logo-raceopt-transparent.png') }}" alt="RaceOpt" width="2172" height="724" />
           <span class="brand-sub">Random Forest · FastF1</span>
         </a>
-        <div class="tabs">
+        <button class="nav-toggle" type="button" aria-controls="primary-menu" aria-expanded="false" aria-label="เปิดเมนู">
+          <span aria-hidden="true"></span>
+          <span aria-hidden="true"></span>
+          <span aria-hidden="true"></span>
+        </button>
+        <div class="tabs" id="primary-menu">
           <a class="tab" href="{{ url_for('index') }}"
              {% if request.endpoint == 'index' %}aria-current="page"{% endif %}>Home</a>
           <a class="tab" href="{{ url_for('analysis_page') }}"
@@ -1405,6 +1410,8 @@
         </div>
       </div>
     </nav>
+
+    {% block masthead %}{% endblock %}
 
     <main class="main stack" id="main">
       {% block content %}{% endblock %}
@@ -1426,6 +1433,7 @@
       </div>
     </footer>
 
+    <script src="{{ url_for('static', filename='navigation.js') }}" defer></script>
     {% block scripts %}{% endblock %}
   </body>
 </html>

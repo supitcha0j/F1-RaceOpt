@@ -3,9 +3,10 @@
 .topline { height:5px; background:#fff; animation:none; }
 .nav { background:#e82116; border:0; backdrop-filter:none; }
 .nav-inner { max-width:1360px; min-height:68px; }
-.brand-mark { color:white; font-size:28px; font-style:italic; letter-spacing:-1.5px; }
-.brand-mark::before { background:white; transform:skew(-25deg); width:24px; height:9px; }
+.brand { align-items:center; flex-shrink:0; }
+.brand-logo { display:block; width:180px; height:auto; }
 .brand-sub { display:none; }
+.nav-toggle { display:none; }
 .tab { color:#fff; font-size:10px; letter-spacing:.04em; padding:26px 12px; }
 .tab:hover,.tab[aria-current=page] { background:#c91910; border-bottom-color:white; }
 .main { max-width:1360px; padding-top:0; }
@@ -66,3 +67,43 @@
 @media(min-width:1000px) { .race-stage { min-height:590px; } .car-view { height:380px; margin-top:-50px; } }
 @media(max-width:719px) { .nav-inner { gap:0; } .brand { padding:12px 0; } .tabs { max-width:calc(100% + 2 * var(--gut)); } .tab { padding:14px 12px; } .race-stage { padding:24px 18px 0; min-height:440px; } .stage-heading { margin-top:40px; } .stage-heading h1 { font-size:clamp(52px,12vw,90px); } .stage-top { font-size:8px; letter-spacing:.04em; } .car-view { height:235px; margin-top:-5px; } .stage-bottom { flex-wrap:wrap; font-size:8px; } .feature-band { padding:22px; } .stack > * + * { margin-top:34px; } }
 @media(prefers-reduced-motion:reduce) { .feature-card:hover,.btn:hover { transform:none; } }
+
+/* The opening scene sits outside the reading column and fills the viewport. */
+.race-stage {
+  margin:0;
+  width:100%;
+  height:max(480px, calc(100svh - var(--header-height, 73px)));
+  min-height:0;
+  display:grid;
+  grid-template-rows:auto auto minmax(0, 1fr) auto;
+  padding:clamp(20px, 3vh, 36px) clamp(18px, 4vw, 72px) 0;
+}
+.race-stage .stage-heading { margin-top:clamp(20px, 3vh, 40px); }
+.race-stage .car-view { height:100%; min-height:0; margin-top:0; }
+.race-stage .stage-bottom { padding-bottom:20px; }
+@media(max-width:719px) {
+  .race-stage .stage-heading p { font-size:14px; }
+}
+
+/* Mobile navigation expands below the logo and menu button. */
+@media(max-width:719px) {
+  .nav .nav-inner { flex-direction:row; flex-wrap:wrap; align-items:center; justify-content:space-between; }
+  .nav .brand { padding:4px 0; }
+  .nav-ready .nav-toggle {
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    gap:5px; width:44px; height:44px; padding:10px;
+    border:1px solid rgba(255,255,255,.55); border-radius:4px;
+    background:transparent; color:#fff; cursor:pointer;
+  }
+  .nav-toggle span { display:block; width:22px; height:2px; background:currentColor; }
+  .nav-toggle:focus-visible { outline:2px solid white; outline-offset:3px; }
+  .nav.is-open .nav-toggle span:nth-child(1) { transform:translateY(7px) rotate(45deg); }
+  .nav.is-open .nav-toggle span:nth-child(2) { opacity:0; }
+  .nav.is-open .nav-toggle span:nth-child(3) { transform:translateY(-7px) rotate(-45deg); }
+  .nav .tabs {
+    flex:0 0 100%; flex-direction:column; gap:0; margin:0; padding:0 0 12px;
+    max-width:100%; max-height:calc(100dvh - 80px); overflow-y:auto;
+  }
+  .nav-ready:not(.is-open) .tabs { display:none; }
+  .nav .tab { padding:14px 12px; white-space:normal; }
+}

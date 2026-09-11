@@ -1,0 +1,29 @@
+.race-replay { overflow:hidden; background:#0b1521; color:#fff; border:1px solid #263748; border-radius:10px; }
+.race-replay-top { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:14px 18px; background:#101e2d; }
+.race-replay-tag { font:700 12px var(--mono); letter-spacing:.12em; }
+.race-replay-tag b { display:block; margin-top:5px; color:#90a8bd; font-size:8px; font-weight:400; }
+.race-replay-top button { min-height:40px; background:#243647; color:#fff; border:1px solid #456078; border-radius:5px; padding:8px 12px; font:11px var(--mono); cursor:pointer; }
+.race-replay-top button:focus-visible { outline:2px solid #a5f36b; outline-offset:3px; }
+.race-replay-scene { position:relative; height:410px; }
+#raceReplayCanvas { display:block; width:100%; height:100%; }
+.race-replay-overlay { position:absolute; left:20px; top:20px; display:grid; gap:6px; pointer-events:none; text-shadow:0 2px 8px #000; }
+.race-replay-overlay span { color:#c7d8e6; font:11px var(--mono); }
+.race-replay-overlay strong { color:#b9ff87; font:700 clamp(18px,3vw,28px) var(--display); }
+.race-replay-caption { position:absolute; bottom:0; left:0; right:0; padding:22px 18px 14px; background:linear-gradient(transparent,#0b1521); display:flex; align-items:center; gap:8px; font:10px var(--mono); }
+.race-replay-caption > span:last-child { margin-left:auto; color:#a9bfce; font-size:9px; }
+.race-replay-dot { width:8px; height:8px; background:#ff4b3f; border-radius:50%; }
+.race-replay-note { color:var(--fg-2); font-size:11px; line-height:1.7; margin:10px 0 18px; }
+.race-replay-data { align-items:start; }
+.race-replay-chart { min-width:0; border:1px solid var(--line); padding:12px; }
+.race-replay-chart summary { cursor:pointer; font-size:12px; padding:5px; }
+.race-replay-chart .chart { margin-top:12px; }
+@media(max-width:719px) {
+  .race-replay-scene { height:350px; }
+  .race-replay-top { padding:10px; gap:6px; }
+  .race-replay-tag { font-size:10px; }
+  .race-replay-top button { font-size:10px; padding:6px 8px; }
+  .race-replay-caption { flex-wrap:wrap; font-size:9px; }
+  .race-replay-caption > span:last-child { flex-basis:100%; margin-left:0; }
+  .race-replay-data { grid-template-columns:1fr; }
+  .replay-transport { flex-wrap:wrap; max-width:100%; }
+}
