@@ -5,25 +5,25 @@
 
 <header class="page-head">
   <p class="eyebrow">05 / Performance audit</p>
-  <h1 class="page-title">เบื้องหลังตัวเลข</h1>
+  <h1 class="page-title">Behind the numbers</h1>
   <p class="lede">
-    รายงานตรวจสอบโมเดล Random Forest ที่ train จาก lap telemetry จริงของ FastF1 —
-    แสดง configuration, feature ที่ใช้ และความคลาดเคลื่อนของเวลาที่จำลองได้เทียบกับเวลาจริง
+    A validation report for the Random Forest model trained on real FastF1 lap telemetry —
+    showing its configuration, input features, and how far simulated times land from real ones.
   </p>
 </header>
 
 <div class="notice notice-warn">
-  <p class="notice-title">ขอบเขตของรายงาน</p>
+  <p class="notice-title">Scope of this report</p>
   <p>
-    ตัวเลขในหน้านี้คือการ <b>ตรวจสอบความถูกต้องของโมเดล</b> ไม่ใช่การหากลยุทธ์ที่ดีกว่า —
-    ทุก combination ใช้ parameter ชุดเดียวกับที่นักแข่งใช้จริงในการแข่ง แล้วเทียบว่าเวลาที่จำลองได้
-    ห่างจากเวลาจริงเท่าไร ยิ่ง % ต่างน้อย โมเดลยิ่งแม่นยำ
-    การค้นหากลยุทธ์ที่เร็วกว่าอยู่ในหน้า Strategy Analysis
+    The numbers on this page <b>validate the model's accuracy</b>; they don't search for better strategies —
+    every combination uses the exact parameters the driver actually raced with, then measures how far the simulated time
+    is from the real time. The smaller the % difference, the more accurate the model.
+    Searching for faster strategies happens on the Strategy Analysis page.
   </p>
 </div>
 
 <!-- ═══ Headline figures ═══════════════════════════════════ -->
-<section aria-label="สรุปผลรวมของโมเดล">
+<section aria-label="Model summary">
   <div class="metrics cols-5">
     <div class="metric">
       <span class="metric-k">MAE</span>
@@ -60,38 +60,38 @@
 <section aria-labelledby="val-h">
   <div class="section-head">
     <span class="section-no">01</span>
-    <h2 class="section-title" id="val-h">ผลการตรวจสอบ — เวลาจริง vs เวลาจำลอง</h2>
+    <h2 class="section-title" id="val-h">Validation — real vs simulated time</h2>
     <span class="section-note">{{ train_combos|length }} combinations</span>
   </div>
   <p class="section-sub">
-    แต่ละจุดคือ 1 นักแข่งใน 1 สนาม จำลองด้วย parameter ชุดเดียวกับที่ใช้จริง
+    Each point is one driver at one circuit, simulated with the parameters actually used.
   </p>
 
   <div class="panel">
     <div class="panel-head">
-      <h3 class="panel-title">เวลารวมทั้งการแข่งขัน</h3>
-      <span class="panel-note push">หน่วย: h:mm:ss</span>
+      <h3 class="panel-title">Total race time</h3>
+      <span class="panel-note push">Units: h:mm:ss</span>
     </div>
     <div class="panel-body">
       <div class="chart h-lg"><canvas id="realVsSimLine"></canvas></div>
       <div class="legend" style="margin-top: 12px">
-        <span><i style="background: #565B6B"></i>เวลาจริง (FastF1)</span>
-        <span><i style="background: #E0143C"></i>เวลาจำลอง (โมเดล)</span>
+        <span><i style="background: #565B6B"></i>Real time (FastF1)</span>
+        <span><i style="background: #E0143C"></i>Simulated time (model)</span>
       </div>
     </div>
   </div>
 
   <div class="panel" style="margin-top: 14px">
     <div class="panel-head">
-      <h3 class="panel-title">% ความต่างระหว่างเวลาจำลองกับเวลาจริง</h3>
-      <span class="panel-note push">0% = ตรงกับเวลาจริง</span>
+      <h3 class="panel-title">% difference between simulated and real time</h3>
+      <span class="panel-note push">0% = matches real time</span>
     </div>
     <div class="panel-body">
       <div class="chart h-sm"><canvas id="diffPctLine"></canvas></div>
       <div class="legend" style="margin-top: 12px">
-        <span><i style="background: #167A46"></i>ต่างน้อยกว่า 1%</span>
+        <span><i style="background: #167A46"></i>Under 1% off</span>
         <span><i style="background: #B15900"></i>1–3%</span>
-        <span><i style="background: #C41E3A"></i>มากกว่า 3%</span>
+        <span><i style="background: #C41E3A"></i>Over 3%</span>
       </div>
     </div>
   </div>
@@ -101,12 +101,12 @@
 <section aria-labelledby="combo-h">
   <div class="section-head">
     <span class="section-no">02</span>
-    <h2 class="section-title" id="combo-h">ผลรายละเอียดต่อ combination</h2>
+    <h2 class="section-title" id="combo-h">Per-combination results</h2>
     <span class="section-note">real vs sim per driver</span>
   </div>
 
   <div class="panel">
-    <div class="tbl-wrap" tabindex="0" role="region" aria-label="ตารางผลการตรวจสอบต่อ combination">
+    <div class="tbl-wrap" tabindex="0" role="region" aria-label="Validation results per combination">
       <table class="tbl">
         <thead>
           <tr>
@@ -155,7 +155,7 @@
         </tbody>
         <tfoot>
           <tr>
-            <td colspan="5">รวมทั้งหมด</td>
+            <td colspan="5">Total</td>
             <td class="t-ctr col-opt">{{ total_laps_trained }}</td>
             <td colspan="3"></td>
             <td class="t-num col-opt">{{ "%.3f"|format(mae_overall) }}</td>
@@ -165,7 +165,7 @@
       </table>
     </div>
     <div class="panel-foot">
-      Delta = เวลาจำลอง − เวลาจริง (วินาที) · Deviation = Delta คิดเป็น % ของเวลาจริง
+      Delta = simulated time − real time (seconds) · Deviation = Delta as a % of real time
     </div>
   </div>
 </section>
@@ -174,15 +174,15 @@
 <section aria-labelledby="cross-h">
   <div class="section-head">
     <span class="section-no">03</span>
-    <h2 class="section-title" id="cross-h">ความต่างระหว่างนักแข่งใน parameter ชุดเดียวกัน</h2>
+    <h2 class="section-title" id="cross-h">Driver-to-driver spread on the same parameters</h2>
     <span class="section-note">{{ same_param_compare|length }} pairs</span>
   </div>
   <p class="section-sub">
-    ใช้ feature set เดียวกันในสนามเดียวกัน เทียบว่า deviation ของแต่ละนักแข่งห่างกันเท่าไร
+    Same feature set, same circuit — how far apart each driver's deviation lands.
   </p>
 
   <div class="panel">
-    <div class="tbl-wrap" tabindex="0" role="region" aria-label="ตารางเปรียบเทียบ deviation ระหว่างนักแข่ง">
+    <div class="tbl-wrap" tabindex="0" role="region" aria-label="Deviation comparison between drivers">
       <table class="tbl">
         <thead>
           <tr>
@@ -220,7 +220,7 @@
         </tbody>
       </table>
     </div>
-    <div class="panel-foot">Spread = ผลต่างของ deviation ระหว่างสองนักแข่งในสนามเดียวกัน</div>
+    <div class="panel-foot">Spread = difference in deviation between two drivers at the same circuit</div>
   </div>
 </section>
 
@@ -235,13 +235,13 @@
   </div>
 
   <div class="panel">
-    <div class="tbl-wrap" tabindex="0" role="region" aria-label="ตาราง hyperparameters">
+    <div class="tbl-wrap" tabindex="0" role="region" aria-label="Hyperparameters">
       <table class="tbl">
         <thead>
           <tr>
             <th scope="col">Hyperparameter</th>
             <th scope="col" class="t-num">Value</th>
-            <th scope="col" class="wrap">คำอธิบาย</th>
+            <th scope="col" class="wrap">Description</th>
           </tr>
         </thead>
         <tbody>
@@ -266,17 +266,17 @@
     <span class="section-note">{{ features|length }} features</span>
   </div>
   <p class="section-sub">
-    Compound และ TrackStatus แปลงเป็น one-hot ก่อน train · Impact คือน้ำหนักที่ feature นั้นมีต่อการทำนาย lap time
+    Compound and TrackStatus are one-hot encoded before training · Impact is how much weight that feature carries in predicting lap time
   </p>
 
   <div class="panel">
-    <div class="tbl-wrap" tabindex="0" role="region" aria-label="ตาราง input features">
+    <div class="tbl-wrap" tabindex="0" role="region" aria-label="Input features">
       <table class="tbl">
         <thead>
           <tr>
             <th scope="col">Feature</th>
             <th scope="col" class="col-opt">Type</th>
-            <th scope="col" class="wrap">คำอธิบาย</th>
+            <th scope="col" class="wrap">Description</th>
             <th scope="col" class="t-ctr">Impact</th>
           </tr>
         </thead>
@@ -287,7 +287,7 @@
             <td class="col-opt dim" style="text-transform: uppercase; letter-spacing: 0.06em; font-size: 10.5px">{{ f.type }}</td>
             <td class="wrap fg2">{{ f.desc }}</td>
             <td class="t-ctr">
-              <span class="impact" role="img" aria-label="impact {{ f.impact }} จาก 5">
+              <span class="impact" role="img" aria-label="impact {{ f.impact }} of 5">
                 {% for i in range(5) %}<i class="{% if i < f.impact %}on{% endif %}"></i>{% endfor %}
               </span>
             </td>
@@ -342,14 +342,14 @@ document.addEventListener('DOMContentLoaded', function () {
     bodyFont: { family: MONO, size: 11 },
   };
 
-  // ── เวลาจริง vs เวลาจำลอง ─────────────────────────────
+  // ── Real vs simulated time ─────────────────────────────
   new Chart(document.getElementById("realVsSimLine"), {
     type: "line",
     data: {
       labels,
       datasets: [
         {
-          label: "เวลาจริง (s)",
+          label: "Real time (s)",
           data: reals,
           borderColor: STEEL,
           backgroundColor: STEEL,
@@ -357,7 +357,7 @@ document.addEventListener('DOMContentLoaded', function () {
           pointRadius: 3, pointHoverRadius: 5, pointStyle: "rect",
         },
         {
-          label: "เวลาจำลอง (s)",
+          label: "Simulated time (s)",
           data: sims,
           borderColor: RED,
           backgroundColor: RED,

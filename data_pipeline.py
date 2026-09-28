@@ -79,7 +79,7 @@ def _load_season_schedule(year: int):
 
     races, drivers = _build_season_schedule(year)
     if not races:
-        raise ValueError(f"ไม่พบข้อมูลสนามแข่งของฤดูกาล {year}")
+        raise ValueError(f"No race data found for the {year} season")
 
     os.makedirs("cache", exist_ok=True)
     with open(cache_path, "wb") as f:
@@ -288,7 +288,7 @@ def load_race_laps(year=2023, gp="Bahrain", driver="VER"):
     laps = laps.reset_index(drop=True)
 
     if laps.empty:
-        raise ValueError(f"ไม่พบ lap ของ {driver} ใน {gp} {year}")
+        raise ValueError(f"No laps found for {driver} in {gp} {year}")
 
     total_laps = int(laps["LapNumber"].max())
 
@@ -372,7 +372,7 @@ def load_multi_race_laps(race_driver_list):
             print(f"    ✗ ข้าม {driver} @ {gp} {year}: {e}")
 
     if not all_data:
-        raise ValueError("ไม่สามารถโหลดข้อมูลได้เลย")
+        raise ValueError("Could not load any data")
 
     combined = pd.concat(all_data, ignore_index=True)
     combined = pd.get_dummies(combined, columns=["DriverCode", "GP_Label"], drop_first=False)

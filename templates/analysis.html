@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}อ่านการแข่งขันให้ขาด · RaceOpt{% endblock %}
+{% block title %}Read the race · RaceOpt{% endblock %}
 
 {#- ── Tyre + stint primitives ─────────────────────────────── -#}
 {%- macro cmp(c) -%}
@@ -20,7 +20,7 @@
 {%- set b = p2 if p2 and p2 > a and p2 < t else 0 -%}
 <div class="stint">
   <div class="stint-track" role="img"
-       aria-label="Stint plan: {{ c1 }} ถึง lap {{ a }}{% if b %}, {{ c2 }} ถึง lap {{ b }}, {{ c3 or 'HARD' }} ถึง lap {{ t }}{% else %}, {{ c2 }} ถึง lap {{ t }}{% endif %}">
+       aria-label="Stint plan: {{ c1 }} to lap {{ a }}{% if b %}, {{ c2 }} to lap {{ b }}, {{ c3 or 'HARD' }} to lap {{ t }}{% else %}, {{ c2 }} to lap {{ t }}{% endif %}">
     <span class="stint-seg s-{{ (c1 or 'medium')|lower }}" style="width: {{ "%.3f"|format(a / t * 100) }}%"></span>
     {%- if b %}
     <span class="stint-seg s-{{ (c2 or 'soft')|lower }}" style="width: {{ "%.3f"|format((b - a) / t * 100) }}%"></span>
@@ -46,20 +46,20 @@
   <p class="eyebrow">01 / Strategy desk</p>
   <h1 class="page-title">Strategy Analysis</h1>
   <p class="lede">
-    ย้อนดูจังหวะสำคัญของการแข่งขัน เปรียบเทียบชุดยางและรอบเข้าพิท เพื่อค้นหาวินาทีที่ยังทำได้ดีกว่า
+    Revisit the key moments of a race and compare tyre sets and pit laps to find the seconds still left on the table.
   </p>
 </header>
 
 <section aria-labelledby="sel-h">
   <div class="panel">
     <div class="panel-head">
-      <h2 class="panel-title" id="sel-h">ตั้งค่าการวิเคราะห์</h2>
-      <span class="panel-note push">เลือกสนาม / เลือกนักแข่ง</span>
+      <h2 class="panel-title" id="sel-h">Analysis setup</h2>
+      <span class="panel-note push">Pick a circuit / pick a driver</span>
     </div>
     <div class="panel-body">
       <form method="post" class="form-row">
         <div class="field">
-          <label for="race_key">สนามแข่ง</label>
+          <label for="race_key">Circuit</label>
           <select name="race_key" id="race_key">
             {% for key, info in available_races.items() %}
             <option value="{{ key }}" {% if key == selected_race_key %}selected{% endif %}>{{ info.label }} · {{ info.laps }} laps</option>
@@ -67,7 +67,7 @@
           </select>
         </div>
         <div class="field">
-          <label for="driver">นักแข่ง</label>
+          <label for="driver">Driver</label>
           <select name="driver" id="driver">
             {% for d in available_drivers %}
             <option value="{{ d }}" {% if d == selected_driver %}selected{% endif %}>{{ d }}</option>
@@ -76,7 +76,7 @@
         </div>
         <div class="field">
           <button type="submit" class="btn block">
-            วิเคราะห์
+            Analyze
             <svg class="btn-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
           </button>
         </div>
@@ -87,7 +87,7 @@
 
 {% if error %}
 <div class="notice notice-bad" role="alert">
-  <p class="notice-title">การวิเคราะห์ไม่สำเร็จ</p>
+  <p class="notice-title">Analysis failed</p>
   <p>{{ error }}</p>
 </div>
 {% endif %}
@@ -122,7 +122,7 @@
 <section aria-labelledby="best-h">
   <div class="section-head">
     <span class="section-no">01</span>
-    <h2 class="section-title" id="best-h">กลยุทธ์ที่ดีที่สุด</h2>
+    <h2 class="section-title" id="best-h">Best strategy</h2>
     <span class="section-note">
       {% if top_faster %}{{ top_faster|length }} strategies faster than real{% else %}no faster strategy found{% endif %}
     </span>
@@ -155,20 +155,20 @@
         </div>
 
         <div>
-          <p class="eyebrow muted">เร็วกว่าเวลาจริง</p>
+          <p class="eyebrow muted">Faster than real</p>
           <p class="gain-big ok" style="margin-top: 8px">−<span data-countup="{{ "%.2f"|format(best.delta_sec|abs) }}">{{ "%.2f"|format(best.delta_sec|abs) }}</span><span class="big"> s</span></p>
-          <p class="kv" style="margin-top: 6px">−{{ "%.2f"|format(best.delta_pct|abs) }}% ของเวลารวม</p>
+          <p class="kv" style="margin-top: 6px">−{{ "%.2f"|format(best.delta_pct|abs) }}% of total time</p>
           <div class="divider"></div>
-          <p class="kv">เวลาจริง <b>{{ "%.1f"|format(result.real_total) }} s</b></p>
-          <p class="kv">เวลาจำลอง <b>{{ "%.1f"|format(best.sim_total) }} s</b></p>
+          <p class="kv">Real time <b>{{ "%.1f"|format(result.real_total) }} s</b></p>
+          <p class="kv">Simulated time <b>{{ "%.1f"|format(best.sim_total) }} s</b></p>
         </div>
       </div>
     </div>
   </div>
   {% else %}
   <div class="notice">
-    <p class="notice-title">ไม่พบกลยุทธ์ที่เร็วกว่า</p>
-    <p>grid search ไม่พบชุดยาง/รอบพิทที่ให้เวลารวมต่ำกว่าเวลาจริงของ {{ result.driver }} ในสนามนี้</p>
+    <p class="notice-title">No faster strategy found</p>
+    <p>The grid search found no tyre/pit-lap combination with a lower total time than {{ result.driver }}'s real time at this circuit.</p>
   </div>
   {% endif %}
 </section>
@@ -178,12 +178,12 @@
 <section aria-labelledby="alt-h">
   <div class="section-head">
     <span class="section-no">02</span>
-    <h2 class="section-title" id="alt-h">กลยุทธ์อื่นที่เร็วกว่า</h2>
+    <h2 class="section-title" id="alt-h">Other faster strategies</h2>
     <span class="section-note">ref {{ "%.1f"|format(result.real_total) }} s</span>
   </div>
 
   <div class="panel">
-    <div class="tbl-wrap" tabindex="0" role="region" aria-label="ตารางกลยุทธ์ที่เร็วกว่าเวลาจริง">
+    <div class="tbl-wrap" tabindex="0" role="region" aria-label="Strategies faster than the real race time">
       <table class="tbl">
         <thead>
           <tr>
@@ -216,7 +216,7 @@
         </tbody>
       </table>
     </div>
-    <div class="panel-foot">Delta = เวลาจำลอง − เวลาจริง · ค่าติดลบคือเร็วกว่า</div>
+    <div class="panel-foot">Delta = simulated time − real time · negative means faster</div>
   </div>
 </section>
 {% endif %}
@@ -230,12 +230,12 @@
     <span class="section-note">baseline pit lap {{ baseline.pit_lap if baseline else '—' }}</span>
   </div>
   <p class="section-sub">
-    เทียบรอบพิทของแต่ละกลยุทธ์ที่เร็วกว่ากับ baseline — เข้าพิทเร็วกว่า (Undercut) คือยึด track position
-    ด้วยยางใหม่ก่อนคู่แข่ง เข้าพิทช้ากว่า (Overcut) คือ push ต่อด้วยยางเก่าแล้วออกมาเจอแทร็กโล่ง
+    Compares each faster strategy's pit lap with the baseline — pitting earlier (Undercut) grabs track position
+    on fresh tyres before rivals; pitting later (Overcut) pushes on old tyres and rejoins in clear air.
   </p>
 
   <div class="panel">
-    <div class="tbl-wrap" tabindex="0" role="region" aria-label="ตาราง undercut overcut">
+    <div class="tbl-wrap" tabindex="0" role="region" aria-label="Undercut and overcut table">
       <table class="tbl">
         <thead>
           <tr>
@@ -261,7 +261,7 @@
         </tbody>
       </table>
     </div>
-    <div class="panel-foot">vs baseline = ผลต่างรอบพิทเทียบ baseline (MEDIUM › SOFT · pit ~35%)</div>
+    <div class="panel-foot">vs baseline = pit-lap difference from the baseline (MEDIUM › SOFT · pit ~35%)</div>
   </div>
 </section>
 {% endif %}
@@ -271,7 +271,7 @@
 <section aria-labelledby="param-h">
   <div class="section-head">
     <span class="section-no">04</span>
-    <h2 class="section-title" id="param-h">Parameter ที่เปลี่ยนจาก baseline</h2>
+    <h2 class="section-title" id="param-h">Parameters changed from baseline</h2>
     <span class="section-note">baseline MEDIUM › SOFT · pit ~35%</span>
   </div>
 
@@ -298,7 +298,7 @@
     <span class="section-note">pace offset {{ "%+.2f"|format(calibration.pace_offset) }} s/lap</span>
   </div>
   <p class="section-sub">
-    ตรวจว่าโมเดลทำนายเวลาต่อ lap ใกล้ผลจริงแค่ไหน ก่อนนำไปใช้ค้นหากลยุทธ์ — ยิ่ง % ต่างน้อย ยิ่งเชื่อผลด้านบนได้มากขึ้น
+    Checks how close the model's per-lap predictions are to reality before using it to search strategies — the smaller the % difference, the more you can trust the results above.
   </p>
 
   <div class="metrics">
@@ -313,14 +313,14 @@
       <span class="metric-u">s / lap</span>
     </div>
     <div class="metric">
-      <span class="metric-k">Diff · ก่อน calibrate</span>
+      <span class="metric-k">Diff · before calibration</span>
       <span class="metric-v {% if calibration.diff_before|abs < 1 %}ok{% elif calibration.diff_before|abs < 3 %}warn{% else %}bad{% endif %}">
         {{ "%+.2f"|format(calibration.diff_before) }}%
       </span>
       <span class="metric-u">sim vs real</span>
     </div>
     <div class="metric">
-      <span class="metric-k">Diff · หลัง calibrate</span>
+      <span class="metric-k">Diff · after calibration</span>
       <span class="metric-v {% if calibration.diff_after|abs < 1 %}ok{% elif calibration.diff_after|abs < 3 %}warn{% else %}bad{% endif %}">
         {{ "%+.2f"|format(calibration.diff_after) }}%
       </span>
@@ -330,14 +330,14 @@
 
   <div class="panel" style="margin-top: 14px">
     <div class="panel-head">
-      <h3 class="panel-title">Lap time · จริง vs ทำนาย</h3>
+      <h3 class="panel-title">Lap time · real vs predicted</h3>
       <span class="panel-note push">{{ result.driver }} · {{ result.race_label }}</span>
     </div>
     <div class="panel-body">
       <div class="chart h-md"><canvas id="lapChart"></canvas></div>
       <div class="legend" style="margin-top: 12px">
-        <span><i style="background: #565B6B"></i>เวลาจริง (FastF1)</span>
-        <span><i style="background: #E0143C"></i>เวลาที่โมเดลทำนาย</span>
+        <span><i style="background: #565B6B"></i>Real time (FastF1)</span>
+        <span><i style="background: #E0143C"></i>Model prediction</span>
       </div>
     </div>
   </div>
@@ -345,9 +345,9 @@
 
 {% else %}
 
-<section class="analysis-preview" aria-label="เริ่มต้นการวิเคราะห์">
-  <img src="{{ url_for('static', filename='img/circuits/Abu_Dhabi.jpg') }}" alt="สนามแข่ง Abu Dhabi" />
-  <div><p class="eyebrow">Look back. Find the difference.</p><h2>การแข่งขันจบแล้ว<br>แต่ยังมีอะไรให้ค้นหา</h2><p>เลือกสนามและนักแข่งด้านบน เพื่อดูเวลาต่อรอบ กลยุทธ์ยาง และทางเลือกในการเข้าพิท</p><ol class="workflow"><li>อ่านเวลาต่อรอบ</li><li>เปรียบเทียบกลยุทธ์</li><li>หาจังหวะเข้าพิท</li></ol></div>
+<section class="analysis-preview" aria-label="Start an analysis">
+  <img src="{{ url_for('static', filename='img/circuits/Abu_Dhabi.jpg') }}" alt="Abu Dhabi circuit" />
+  <div><p class="eyebrow">Look back. Find the difference.</p><h2>The race is over,<br>but there's more to find</h2><p>Pick a circuit and driver above to see lap times, tyre strategy and pit-stop alternatives.</p><ol class="workflow"><li>Read the lap times</li><li>Compare strategies</li><li>Find the pit window</li></ol></div>
 </section>
 
 {% endif %}
@@ -376,14 +376,14 @@
       labels: lapLabels,
       datasets: [
         {
-          label: "จริง",
+          label: "Real",
           data: actualLaps,
           borderColor: "#565B6B",
           backgroundColor: "#565B6B",
           borderWidth: 1.5, tension: 0, pointRadius: 0, pointHitRadius: 8,
         },
         {
-          label: "ทำนาย (หลัง calibrate)",
+          label: "Predicted (calibrated)",
           data: predLaps,
           borderColor: "#E0143C",
           backgroundColor: "#E0143C",

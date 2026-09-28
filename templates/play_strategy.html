@@ -23,7 +23,7 @@
 {%- set b = p2 if p2 and p2 > a and p2 < t else 0 -%}
 <div class="stint">
   <div class="stint-track" role="img"
-       aria-label="Stint plan: {{ c1 }} ถึง lap {{ a }}{% if b %}, {{ c2 }} ถึง lap {{ b }}, {{ c3 or 'HARD' }} ถึง lap {{ t }}{% else %}, {{ c2 }} ถึง lap {{ t }}{% endif %}">
+       aria-label="Stint plan: {{ c1 }} to lap {{ a }}{% if b %}, {{ c2 }} to lap {{ b }}, {{ c3 or 'HARD' }} to lap {{ t }}{% else %}, {{ c2 }} to lap {{ t }}{% endif %}">
     <span class="stint-seg s-{{ (c1 or 'medium')|lower }}" style="width: {{ "%.3f"|format(a / t * 100) }}%"></span>
     {%- if b %}
     <span class="stint-seg s-{{ (c2 or 'soft')|lower }}" style="width: {{ "%.3f"|format((b - a) / t * 100) }}%"></span>
@@ -47,9 +47,9 @@
 
 <header class="page-head">
   <p class="eyebrow">02 / Race simulator</p>
-  <h1 class="page-title">ตัดสินใจจากพิทวอลล์</h1>
+  <h1 class="page-title">Make the call from the pit wall</h1>
   <p class="lede">
-    กำหนดยางและรอบพิทเอง แล้วให้โมเดลจำลองเวลารวมของคุณเทียบกับนักแข่งทั้งกริดในสนามเดียวกัน
+    Choose your own tyres and pit laps, then let the model simulate your total race time against the full grid at the same circuit.
   </p>
 </header>
 
@@ -59,12 +59,12 @@
   <div class="lab-form">
     <div class="panel">
       <div class="panel-head">
-        <h2 class="panel-title">ตั้งค่ากลยุทธ์</h2>
+        <h2 class="panel-title">Strategy setup</h2>
       </div>
       <div class="panel-body">
         <form method="post">
           <div class="field">
-            <label for="race_key">สนามแข่ง</label>
+            <label for="race_key">Circuit</label>
             <select name="race_key" id="race_key">
               {% for key, info in available_races.items() %}
               <option value="{{ key }}" {% if key == selected_race_key %}selected{% endif %}>
@@ -75,7 +75,7 @@
           </div>
 
           <div class="field" style="margin-top: 16px">
-            <label for="start_compound">ยางเริ่มต้น</label>
+            <label for="start_compound">Starting tyre</label>
             <select name="start_compound" id="start_compound">
               <option value="SOFT"   {% if form_data and form_data.start == 'SOFT'   %}selected{% endif %}>SOFT · C3</option>
               <option value="MEDIUM" {% if not form_data or form_data.start == 'MEDIUM' %}selected{% endif %}>MEDIUM · C2</option>
@@ -84,7 +84,7 @@
           </div>
 
           <div class="field" style="margin-top: 16px">
-            <label for="second_compound">ยางหลังพิท</label>
+            <label for="second_compound">Tyre after pit stop</label>
             <select name="second_compound" id="second_compound">
               <option value="SOFT"   {% if form_data and form_data.second == 'SOFT' %}selected{% endif %}>SOFT · C3</option>
               <option value="MEDIUM" {% if form_data and form_data.second == 'MEDIUM' %}selected{% endif %}>MEDIUM · C2</option>
@@ -93,16 +93,16 @@
           </div>
 
           <div class="field" style="margin-top: 16px">
-            <label for="pit_lap">รอบที่เข้าพิท (ครั้งที่ 1)</label>
+            <label for="pit_lap">Pit lap (stop 1)</label>
             <input type="number" name="pit_lap" id="pit_lap"
               min="2" max="{{ total_laps - 2 }}"
               value="{{ form_data.pit_lap if form_data else 20 }}"
               aria-describedby="pit_lap_hint" />
-            <p class="hint" id="pit_lap_hint">Lap 2 – {{ total_laps - 2 }} · สนามนี้ {{ total_laps }} laps</p>
+            <p class="hint" id="pit_lap_hint">Lap 2 – {{ total_laps - 2 }} · this race is {{ total_laps }} laps</p>
           </div>
 
           <div class="field" style="margin-top: 16px">
-            <label for="num_stops">จำนวนครั้งพิท</label>
+            <label for="num_stops">Number of stops</label>
             <select name="num_stops" id="num_stops">
               <option value="1" {% if not form_data or form_data.num_stops == 1 %}selected{% endif %}>1 stop</option>
               <option value="2" {% if form_data and form_data.num_stops == 2 %}selected{% endif %}>2 stops</option>
@@ -111,14 +111,14 @@
 
           <div id="two_stop_fields" hidden>
             <div class="field" style="margin-top: 16px">
-              <label for="second_pit_lap">รอบที่เข้าพิท (ครั้งที่ 2)</label>
+              <label for="second_pit_lap">Pit lap (stop 2)</label>
               <input type="number" name="second_pit_lap" id="second_pit_lap"
                 min="4" max="{{ total_laps - 2 }}"
                 value="{{ form_data.second_pit_lap if form_data and form_data.second_pit_lap else (total_laps - 15) }}" />
             </div>
 
             <div class="field" style="margin-top: 16px">
-              <label for="third_compound">ยาง stint ที่ 3</label>
+              <label for="third_compound">Stint 3 tyre</label>
               <select name="third_compound" id="third_compound">
                 <option value="SOFT"   {% if form_data and form_data.third == 'SOFT'   %}selected{% endif %}>SOFT · C3</option>
                 <option value="MEDIUM" {% if form_data and form_data.third == 'MEDIUM' %}selected{% endif %}>MEDIUM · C2</option>
@@ -128,13 +128,13 @@
           </div>
 
           <button type="submit" class="btn block" style="margin-top: 20px">
-            จำลองกลยุทธ์
+            Simulate strategy
             <svg class="btn-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
           </button>
         </form>
       </div>
       <div class="panel-foot">
-        จำลองด้วย pace model รายบุคคล แล้วจัดอันดับจากเวลารวม
+        Simulated with a per-driver pace model, then ranked by total race time
       </div>
     </div>
   </div>
@@ -146,7 +146,7 @@
 
     <div class="panel accent">
       <div class="panel-head">
-        <h2 class="panel-title">ผลการจำลอง</h2>
+        <h2 class="panel-title">Simulation result</h2>
         <span class="panel-note push">
           {{ race_label }} · {{ total_laps }} laps
           {% if result.weather %} · {{ "WET" if result.weather.wet else "DRY" }} · {{ result.weather.track_temp }}°C track{% endif %}
@@ -158,15 +158,15 @@
         <div class="split">
 
           <div>
-            <p class="eyebrow muted">อันดับที่ได้</p>
+            <p class="eyebrow muted">Finishing position</p>
             <div class="row" style="margin-top: 6px; gap: 18px">
               <span class="rank-big {% if result.rank == 1 %}lead{% endif %}" data-prefix="P" data-countup="{{ result.rank }}">P{{ result.rank }}</span>
-              <span class="kv">จาก <b>{{ leaderboard|length }}</b> คัน</span>
+              <span class="kv">of <b>{{ leaderboard|length }}</b> cars</span>
             </div>
 
             <div class="divider"></div>
 
-            <p class="eyebrow muted">กลยุทธ์ของคุณ</p>
+            <p class="eyebrow muted">Your strategy</p>
             <div class="row" style="margin-top: 8px">
               {{ seq(result.start, result.second, result.third) }}
               <span class="big">{{ result.start }} › {{ result.second }}{% if result.third %} › {{ result.third }}{% endif %}</span>
@@ -183,17 +183,17 @@
           </div>
 
           <div>
-            <p class="eyebrow muted">เวลารวมจำลอง</p>
+            <p class="eyebrow muted">Simulated total time</p>
             <p class="big" style="margin-top: 6px">{{ result.user_time_str }}</p>
             <p class="kv">{{ "%.1f"|format(result.user_time) }} s</p>
 
             <p class="kv" style="margin-top: 10px">
-              เทียบเวลาจริง <b>{{ result.real_time_str }}</b>
+              vs real time <b>{{ result.real_time_str }}</b>
             </p>
             <p class="kv">
-              ส่วนต่าง
+              Difference
               <b class="{% if result.delta_real < 0 %}ok{% else %}warn{% endif %}">{{ result.delta_real_str }}</b>
-              {% if result.delta_real < 0 %}เร็วกว่า{% else %}ช้ากว่า{% endif %}
+              {% if result.delta_real < 0 %}faster{% else %}slower{% endif %}
             </p>
 
             <div class="divider"></div>
@@ -219,26 +219,26 @@
 
     <div class="panel" style="position: relative">
       <div class="panel-head">
-        <h3 class="panel-title">อันดับตลอดการแข่ง</h3>
-        <span class="panel-note push">รอบ <span id="replayLapNow">–</span> / {{ total_laps }}</span>
+        <h3 class="panel-title">Position through the race</h3>
+        <span class="panel-note push">Lap <span id="replayLapNow">–</span> / {{ total_laps }}</span>
       </div>
       <div class="panel-body">
         <div class="replay-hud">
           <div>
-            <p class="metric-k">ตำแหน่งของคุณ</p>
+            <p class="metric-k">Your position</p>
             <div class="replay-pos-row">
               <span class="replay-pos-num" id="replayPosNum">P{{ result.rank }}</span>
               <span class="replay-pos-delta" id="replayPosDelta" aria-live="polite"></span>
             </div>
           </div>
           <div class="replay-transport">
-            <button type="button" class="replay-btn" id="replayPlay" aria-label="เล่นย้อนดูตั้งแต่ Lap 1">
+            <button type="button" class="replay-btn" id="replayPlay" aria-label="Replay from Lap 1">
               <svg id="iconPlay" width="12" height="12" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>
               <svg id="iconPause" width="12" height="12" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" hidden><path d="M6 5h4v14H6zM14 5h4v14h-4z"/></svg>
             </button>
             <button type="button" class="replay-speed" id="replaySpeed">1×</button>
-            <input type="range" id="replaySlider" class="replay-slider" min="1" max="{{ total_laps }}" value="{{ total_laps }}" aria-label="เลื่อนดูอันดับรายรอบ" />
-            <button type="button" class="replay-mute" id="replayMute" aria-label="ปิดเสียง" aria-pressed="false">
+            <input type="range" id="replaySlider" class="replay-slider" min="1" max="{{ total_laps }}" value="{{ total_laps }}" aria-label="Scrub through positions by lap" />
+            <button type="button" class="replay-mute" id="replayMute" aria-label="Mute" aria-pressed="false">
               <svg id="iconSound" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 5 6 9H2v6h4l5 4V5z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M18.5 5.5a9 9 0 0 1 0 13"/></svg>
               <svg id="iconMuted" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" hidden><path d="M11 5 6 9H2v6h4l5 4V5z"/><path d="M23 9l-6 6M17 9l6 6"/></svg>
             </button>
@@ -248,48 +248,48 @@
         <div class="race-replay" id="raceReplay">
           <div class="race-replay-top">
             <span class="race-replay-tag">RACE VISION <b>• STRATEGY REPLAY</b></span>
-            <button type="button" id="replayCamera" aria-label="เปลี่ยนเป็นมุมกล้องมุมสูง">มุมกล้อง: ไล่ตาม ↗</button>
+            <button type="button" id="replayCamera" aria-label="Switch to overhead camera">Camera: chase ↗</button>
           </div>
           <div class="race-replay-scene">
-            <canvas id="raceReplayCanvas" role="img" aria-label="ภาพรถแข่งจำลองตามอันดับรายรอบ"></canvas>
-            <div class="race-replay-overlay"><span id="raceReplayStatus">พร้อมย้อนดูการแข่งขัน</span><strong id="raceReplayEvent">RACE FINISHED</strong></div>
-            <div class="race-replay-caption"><span class="race-replay-dot"></span> YOU · รถสีแดง <span>สนามจำลอง / ระยะรถสื่ออันดับ</span></div>
+            <canvas id="raceReplayCanvas" role="img" aria-label="Simulated race cars positioned by lap-by-lap standings"></canvas>
+            <div class="race-replay-overlay"><span id="raceReplayStatus">Ready to replay the race</span><strong id="raceReplayEvent">RACE FINISHED</strong></div>
+            <div class="race-replay-caption"><span class="race-replay-dot"></span> YOU · red car <span>Simulated track / spacing shows position</span></div>
           </div>
         </div>
-        <p class="race-replay-note">{{ race_label }} · ภาพประกอบอันดับรายรอบ ไม่ใช่ตำแหน่งหรือระยะห่างจริงบนสนาม</p>
+        <p class="race-replay-note">{{ race_label }} · an illustration of lap-by-lap standings, not real on-track positions or gaps</p>
         <div class="replay-grid race-replay-data">
           <details class="race-replay-chart">
-            <summary>ดูกราฟอันดับรายรอบ</summary>
+            <summary>Show lap-by-lap position chart</summary>
             <div class="chart h-md"><canvas id="posChart"></canvas></div>
           </details>
-          <div class="replay-ladder" id="replayLadder" aria-label="กระดานอันดับสด"></div>
+          <div class="replay-ladder" id="replayLadder" aria-label="Live standings"></div>
         </div>
 
         <div class="legend" style="margin-top: 10px">
-          <span><i style="background: var(--brand)"></i>คุณ</span>
-          <span><i style="background: var(--fg-3)"></i>คู่แข่งใกล้เคียง</span>
+          <span><i style="background: var(--brand)"></i>You</span>
+          <span><i style="background: var(--fg-3)"></i>Nearby rivals</span>
         </div>
 
-        <div class="replay-feed" id="replayFeed" aria-live="polite" aria-label="เหตุการณ์ระหว่างแข่ง"></div>
+        <div class="replay-feed" id="replayFeed" aria-live="polite" aria-label="Race events"></div>
 
         <div class="replay-finish" id="replayFinish" hidden>
           <div class="replay-finish-flag"></div>
           <div class="replay-finish-body">
-            <p class="replay-finish-title" id="replayFinishTitle">เข้าเส้นชัย!</p>
+            <p class="replay-finish-title" id="replayFinishTitle">Chequered flag!</p>
             <div class="replay-finish-stats" id="replayFinishStats"></div>
           </div>
         </div>
       </div>
-      <div class="panel-foot">กด Play เพื่อย้อนดูอันดับตั้งแต่ Lap 1 หรือลากแถบเลื่อนดูรอบที่ต้องการ</div>
+      <div class="panel-foot">Press Play to replay positions from Lap 1, or drag the slider to any lap</div>
       <div class="replay-confetti" id="replayConfetti"></div>
     </div>
 
     <div class="panel">
       <div class="panel-head">
-        <h3 class="panel-title">ผลการจำลองทั้งกริด</h3>
-        <span class="panel-note push">แถวที่ทำเครื่องหมายคือกลยุทธ์ของคุณ</span>
+        <h3 class="panel-title">Full-grid simulation</h3>
+        <span class="panel-note push">The highlighted row is your strategy</span>
       </div>
-      <div class="tbl-wrap" tabindex="0" role="region" aria-label="ตารางอันดับผลการจำลอง">
+      <div class="tbl-wrap" tabindex="0" role="region" aria-label="Simulated finishing order">
         <table class="tbl">
           <thead>
             <tr>
@@ -331,16 +331,16 @@
           </tbody>
         </table>
       </div>
-      <div class="panel-foot">Gap = ส่วนต่างเวลารวมจากอันดับ 1 (วินาที)</div>
+      <div class="panel-foot">Gap = total-time gap to P1 (seconds)</div>
     </div>
 
     {% else %}
 
     <section class="garage-preview" aria-labelledby="garage-title">
-      <p class="eyebrow">Your call. Your race.</p><h2 id="garage-title">ทุกการตัดสินใจ<br>มีผลต่อเส้นชัย</h2>
-      <div class="compound-display" aria-label="ยาง Soft Medium Hard"><span class="display-tyre soft">S</span><span class="display-tyre medium">M</span><span class="display-tyre hard">H</span></div>
-      <p>เลือกยาง วางรอบเข้าพิท แล้วจำลองกลยุทธ์ของคุณเทียบกับทั้งกริด</p>
-      <div class="garage-note"><span>01 — เลือกสนาม</span><span>02 — วางแผนยาง</span><span>03 — จำลองผล</span></div>
+      <p class="eyebrow">Your call. Your race.</p><h2 id="garage-title">Every decision<br>shapes the finish</h2>
+      <div class="compound-display" aria-label="Soft, Medium and Hard tyres"><span class="display-tyre soft">S</span><span class="display-tyre medium">M</span><span class="display-tyre hard">H</span></div>
+      <p>Pick your tyres, plan your pit laps, then simulate your strategy against the whole grid.</p>
+      <div class="garage-note"><span>01 — Pick a circuit</span><span>02 — Plan tyres</span><span>03 — Simulate</span></div>
     </section>
 
     {% endif %}
@@ -351,7 +351,7 @@
 
 {% block scripts %}
 <script>
-  // แสดงฟิลด์ pit ครั้งที่ 2 / ยาง stint 3 เฉพาะตอนเลือก 2 stops — ไม่รกฟอร์มตอน 1 stop
+  // Show the 2nd pit lap / stint-3 tyre fields only for 2 stops — keeps the 1-stop form uncluttered
   (function () {
     var numStops   = document.getElementById("num_stops");
     var twoStopBox = document.getElementById("two_stop_fields");
@@ -366,8 +366,8 @@
 <script src="{{ url_for('static', filename='race-replay.js') }}"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-  // กราฟ "อันดับตลอดการแข่ง" — replay ที่ค่อยๆ เปิดเผยอันดับทีละรอบ แทนที่จะ
-  // โชว์เส้นเต็มเฉยๆ ให้รู้สึกเหมือนดูการแข่งจริงมากกว่าดูสรุปผลนิ่งๆ
+  // "Position through the race" chart — a replay that reveals standings lap by lap instead of
+  // just showing full lines, so it feels like watching a race rather than a static summary
   (function () {
     var progress = JSON.parse('{{ lap_progress | tojson | safe }}');
     var totalLaps = progress.labels.length;
@@ -441,7 +441,7 @@
             titleFont: { family: MONO, size: 10 }, bodyFont: { family: MONO, size: 11 },
             callbacks: {
               title: function (items) { return "LAP " + items[0].label; },
-              label: function (ctx) { return (ctx.dataset.label === "YOU" ? "คุณ" : ctx.dataset.label) + ": P" + ctx.parsed.y; },
+              label: function (ctx) { return (ctx.dataset.label === "YOU" ? "You" : ctx.dataset.label) + ": P" + ctx.parsed.y; },
             },
           },
         },
@@ -483,8 +483,8 @@
 
     var pitLaps = progress.pit_laps || [];
 
-    // ── Live standings ladder — ตำแหน่งคุณ + คู่แข่งใกล้เคียง จัดเรียงใหม่
-    // ทุกรอบด้วย FLIP animation ให้เห็นแถวสลับที่กันจริงๆ เหมือนกระดานสด
+    // ── Live standings ladder — your position + nearby rivals, re-sorted
+    // every lap with a FLIP animation so rows visibly swap like a live timing board
     var ladderData = [{ code: "YOU", positions: progress.user, isUser: true, photo: null }]
       .concat(progress.rivals.map(function (r) { return { code: r.code, positions: r.positions, isUser: false, photo: r.photo }; }));
     var rowEls = {};
@@ -530,8 +530,8 @@
       }
     }
 
-    // ── เสียงเอฟเฟกต์ — สังเคราะห์ด้วย Web Audio ล้วนๆ ไม่ต้องโหลดไฟล์เสียง
-    // เริ่มสร้าง AudioContext ตอนกด Play ครั้งแรกเท่านั้น (ต้องมาจาก user gesture)
+    // ── Sound effects — synthesized purely with Web Audio, no audio files to load
+    // Create the AudioContext only on the first Play press (must come from a user gesture)
     var audioCtx = null, muted = false;
     function ensureAudio() {
       var AC = window.AudioContext || window.webkitAudioContext;
@@ -570,10 +570,10 @@
       iconMuted.hidden = !muted;
       muteBtn.classList.toggle("is-muted", muted);
       muteBtn.setAttribute("aria-pressed", String(muted));
-      muteBtn.setAttribute("aria-label", muted ? "เปิดเสียง" : "ปิดเสียง");
+      muteBtn.setAttribute("aria-label", muted ? "Unmute" : "Mute");
     });
 
-    // ── ช่องคอมเมนต์สด ───────────────────────────────
+    // ── Live commentary feed ───────────────────────────────
     function addFeed(html, kind) {
       var el = document.createElement("div");
       el.className = "replay-feed-line" + (kind ? " " + kind : "");
@@ -585,21 +585,21 @@
 
     function narrate(lap) {
       var pos = progress.user[lap - 1];
-      if (lap === 1) { addFeed("🏁 ออกตัว! คุณอยู่ <b>P" + pos + "</b>"); return; }
+      if (lap === 1) { addFeed("🏁 Lights out! You're <b>P" + pos + "</b>"); return; }
       var prevPos = progress.user[lap - 2];
-      if (pitLaps.indexOf(lap) !== -1) { addFeed("🔧 LAP " + lap + " — เข้าพิทเปลี่ยนยาง"); return; }
+      if (pitLaps.indexOf(lap) !== -1) { addFeed("🔧 LAP " + lap + " — Box, box: pitting for new tyres"); return; }
       if (pos === prevPos) return;
       var delta = prevPos - pos;
       if (delta > 0) {
         playBlip();
-        addFeed((delta >= 3 ? "🔥 LAP " + lap + " — แซงรวด " + delta + " อันดับ! ขึ้น " : "⚡ LAP " + lap + " — แซงขึ้น ") + "<b>P" + pos + "</b>", "hot");
+        addFeed((delta >= 3 ? "🔥 LAP " + lap + " — Gains " + delta + " places in one lap! Up to " : "⚡ LAP " + lap + " — Overtake! Up to ") + "<b>P" + pos + "</b>", "hot");
       } else {
         playThud();
-        addFeed("📉 LAP " + lap + " — ตกไป <b>P" + pos + "</b>", "cold");
+        addFeed("📉 LAP " + lap + " — Drops to <b>P" + pos + "</b>", "cold");
       }
     }
 
-    // ── ฉากเข้าเส้นชัย ────────────────────────────────
+    // ── Finish-line scene ────────────────────────────────
     function statBlock(k, v) {
       return '<div><p class="replay-finish-stat-k">' + k + '</p><p class="replay-finish-stat-v">' + v + "</p></div>";
     }
@@ -630,20 +630,20 @@
       var finalPos = progress.user[totalLaps - 1];
       playFanfare();
       var podium = finalPos <= 3;
-      addFeed((podium ? "🏆 เข้าเส้นชัย! ขึ้นโพเดียม " : "🏁 เข้าเส้นชัย อันดับ ") + "<b>P" + finalPos + "</b>", "hot");
+      addFeed((podium ? "🏆 Chequered flag! Podium finish " : "🏁 Chequered flag, finishing ") + "<b>P" + finalPos + "</b>", "hot");
 
       var stats = computeStats();
-      finishTitleEl.textContent = podium ? "🏆 ขึ้นโพเดียม! อันดับ P" + finalPos : "🏁 เข้าเส้นชัย อันดับ P" + finalPos;
+      finishTitleEl.textContent = podium ? "🏆 Podium! P" + finalPos : "🏁 Finished P" + finalPos;
       finishTitleEl.classList.toggle("podium", podium);
       finishStatsEl.innerHTML =
-        statBlock("แซงดีที่สุด", stats.bestGain > 0 ? "+" + stats.bestGain + " อันดับ (Lap " + stats.bestGainLap + ")" : "—") +
-        statBlock("แซงทั้งหมด", stats.overtakes + " ครั้ง") +
-        statBlock("อยู่นานสุด", "P" + stats.holdPos + " · " + stats.longestHold + " รอบ");
+        statBlock("Best gain", stats.bestGain > 0 ? "+" + stats.bestGain + (stats.bestGain === 1 ? " place" : " places") + " (Lap " + stats.bestGainLap + ")" : "—") +
+        statBlock("Total overtakes", String(stats.overtakes)) +
+        statBlock("Longest held", "P" + stats.holdPos + " · " + stats.longestHold + (stats.longestHold === 1 ? " lap" : " laps"));
       finishEl.hidden = false;
       if (podium && !reduceMotion) spawnConfetti();
     }
 
-    var BASE_INTERVAL = 1200; // ให้เห็นการเปลี่ยนอันดับและจังหวะเข้าพิตชัดเจน
+    var BASE_INTERVAL = 1200; // slow enough to clearly see position changes and pit stops
     var speeds = [1, 2, 4];
     var speedIdx = 0;
     var timer = null;
@@ -673,7 +673,7 @@
       posNumEl.classList.remove("flash-ok", "flash-bad");
       deltaEl.classList.remove("show", "ok", "bad");
       if (pos !== prevPos) {
-        var climbed = pos < prevPos; // เลขอันดับลดลง = ไล่ขึ้น
+        var climbed = pos < prevPos; // lower position number = climbing
         void posNumEl.offsetWidth; // restart keyframe
         posNumEl.classList.add(climbed ? "flash-ok" : "flash-bad");
         deltaEl.textContent = climbed ? "▲ +" + (prevPos - pos) : "▼ -" + (pos - prevPos);
@@ -690,7 +690,7 @@
       if (raceScene) raceScene.setPlaying(false);
       iconPlay.hidden = false;
       iconPause.hidden = true;
-      playBtn.setAttribute("aria-label", "เล่นย้อนดูตั้งแต่ Lap 1");
+      playBtn.setAttribute("aria-label", "Replay from Lap 1");
     }
 
     function tick() {
@@ -710,7 +710,7 @@
       }
       iconPlay.hidden = true;
       iconPause.hidden = false;
-      playBtn.setAttribute("aria-label", "หยุดชั่วคราว");
+      playBtn.setAttribute("aria-label", "Pause");
       timer = setInterval(tick, BASE_INTERVAL / speeds[speedIdx]);
       if (raceScene) raceScene.setPlaying(true, speeds[speedIdx]);
     }

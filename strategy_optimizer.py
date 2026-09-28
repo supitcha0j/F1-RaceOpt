@@ -288,7 +288,7 @@ def explain_parameters(best: dict, baseline: dict, real_total: float) -> list:
     # เปรียบ compound
     if best["first_compound"] != baseline.get("first_compound"):
         explanations.append({
-            "param":   "ยางเริ่มต้น (Start Compound)",
+            "param":   "Start Compound",
             "from":    baseline.get("first_compound", "?"),
             "to":      best["first_compound"],
             "reason":  _compound_reason(baseline.get("first_compound"), best["first_compound"], "start"),
@@ -297,7 +297,7 @@ def explain_parameters(best: dict, baseline: dict, real_total: float) -> list:
 
     if best["second_compound"] != baseline.get("second_compound"):
         explanations.append({
-            "param":   "ยางหลังพิท (Second Compound)",
+            "param":   "Second Compound",
             "from":    baseline.get("second_compound", "?"),
             "to":      best["second_compound"],
             "reason":  _compound_reason(baseline.get("second_compound"), best["second_compound"], "second"),
@@ -306,23 +306,23 @@ def explain_parameters(best: dict, baseline: dict, real_total: float) -> list:
 
     if best["third_compound"] and best["third_compound"] != baseline.get("third_compound"):
         explanations.append({
-            "param":   "ยาง Stint ที่ 3 (Third Compound)",
-            "from":    baseline.get("third_compound", "ไม่มี"),
+            "param":   "Third Compound (Stint 3)",
+            "from":    baseline.get("third_compound", "None"),
             "to":      best["third_compound"],
-            "reason":  "เพิ่ม stint ที่ 3 เพื่อใช้ยางที่ทนทานกว่าในช่วงท้าย",
+            "reason":  "Adds a third stint to run a more durable tyre in the closing phase",
             "impact":  "medium",
         })
 
     # เปรียบ pit lap
     pit_diff = best["pit_lap"] - baseline.get("pit_lap", best["pit_lap"])
     if abs(pit_diff) >= 2:
-        direction = "ช้าลง" if pit_diff > 0 else "เร็วขึ้น"
+        direction = "later" if pit_diff > 0 else "earlier"
         tactic    = "Overcut" if pit_diff > 0 else "Undercut"
         explanations.append({
-            "param":   f"รอบที่เข้าพิท (Pit Lap: {baseline.get('pit_lap','?')} → {best['pit_lap']})",
+            "param":   f"Pit Lap ({baseline.get('pit_lap','?')} → {best['pit_lap']})",
             "from":    f"Lap {baseline.get('pit_lap', '?')}",
             "to":      f"Lap {best['pit_lap']}",
-            "reason":  f"เลื่อนพิท{direction} {abs(pit_diff)} laps → ใช้กลยุทธ์ {tactic} เพื่อใช้ยางที่มี grip ดีกว่าในช่วงวิกฤต",
+            "reason":  f"Pitting {abs(pit_diff)} laps {direction} → an {tactic} that puts the grippier tyre on the car during the critical phase",
             "impact":  "high",
         })
 
@@ -330,10 +330,10 @@ def explain_parameters(best: dict, baseline: dict, real_total: float) -> list:
     base_stops = baseline.get("num_stops", 1)
     if best["num_stops"] != base_stops:
         explanations.append({
-            "param":   f"จำนวนครั้งพิท ({base_stops}-stop → {best['num_stops']}-stop)",
+            "param":   f"Pit Stops ({base_stops}-stop → {best['num_stops']}-stop)",
             "from":    f"{base_stops}-stop",
             "to":      f"{best['num_stops']}-stop",
-            "reason":  "การเพิ่มจำนวนพิทช่วยให้ใช้ยางที่มี grip สูงขึ้นได้ตลอด race แม้เสียเวลาพิทเพิ่ม",
+            "reason":  "An extra stop keeps higher-grip tyres on the car throughout the race, outweighing the added pit time",
             "impact":  "medium",
         })
 
@@ -363,12 +363,12 @@ def classify_pit_tactics(results: list, baseline: dict, top_n: int = 6) -> list:
 
 def _compound_reason(from_c, to_c, position):
     mapping = {
-        ("MEDIUM", "SOFT",   "start"):  "Soft มี grip สูงกว่าในช่วงต้น race ช่วยให้ได้เวลาที่ดีกว่าก่อนที่ยางจะเสื่อม",
-        ("SOFT",   "MEDIUM", "start"):  "Medium ทนทานกว่าในช่วงต้น ช่วยให้ยืด stint ได้นานขึ้น",
-        ("MEDIUM", "HARD",   "start"):  "Hard ทนทานมากที่สุด เหมาะกับการยืด stint ยาวในสนามที่ tyre deg สูง",
-        ("SOFT",   "MEDIUM", "second"): "Medium ในช่วงหลังช่วยยืด stint ท้าย race ได้นานกว่า Soft ที่เสื่อมเร็ว",
-        ("MEDIUM", "SOFT",   "second"): "Soft ในช่วงท้ายช่วยให้ push pace ได้สูงสุดในช่วงโค้งสุดท้าย",
-        ("HARD",   "SOFT",   "second"): "Soft ในช่วงท้ายให้ grip สูงสุด เหมาะกับการ attack ในช่วงท้าย race",
+        ("MEDIUM", "SOFT",   "start"):  "Soft has more grip early in the race, banking time before the tyre degrades",
+        ("SOFT",   "MEDIUM", "start"):  "Medium is more durable early on, allowing a longer opening stint",
+        ("MEDIUM", "HARD",   "start"):  "Hard is the most durable, suited to long stints at high-degradation circuits",
+        ("SOFT",   "MEDIUM", "second"): "Medium late on lasts the final stint longer than a fast-degrading Soft",
+        ("MEDIUM", "SOFT",   "second"): "Soft at the end allows maximum push in the closing laps",
+        ("HARD",   "SOFT",   "second"): "Soft at the end gives peak grip for attacking late in the race",
     }
     return mapping.get((from_c, to_c, position),
-                       f"เปลี่ยนจาก {from_c} → {to_c} เพื่อ balance ระหว่าง pace และ durability")
+                       f"Switching {from_c} → {to_c} to balance pace and durability")

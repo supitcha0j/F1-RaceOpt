@@ -5,13 +5,13 @@
 
 <a href="{{ url_for('teams_page') }}" class="eyebrow" style="text-decoration: none">← Teams</a>
 
-<header class="profile-head team-profile" style="--team-color:#{{ team.team_colour }}"><div><p class="eyebrow">Constructor profile</p><h1>{{ team.team_name }}</h1><p class="profile-meta">{{ team.drivers|length }} นักแข่งในทีม</p></div><span class="constructor-stripes" aria-hidden="true">///</span></header>
+<header class="profile-head team-profile" style="--team-color:#{{ team.team_colour }}"><div><p class="eyebrow">Constructor profile</p><h1>{{ team.team_name }}</h1><p class="profile-meta">{{ team.drivers|length }} drivers on the team</p></div><span class="constructor-stripes" aria-hidden="true">///</span></header>
 
 <section aria-labelledby="drivers-h" style="margin-top: 28px">
   <div class="section-head">
     <span class="section-no">01</span>
-    <h2 class="section-title" id="drivers-h">นักแข่งในทีม</h2>
-    <span class="section-note">{{ team.drivers|length }} คน</span>
+    <h2 class="section-title" id="drivers-h">Team drivers</h2>
+    <span class="section-note">{{ team.drivers|length }} drivers</span>
   </div>
 
   {% from '_roster.html' import driver_card with context %}

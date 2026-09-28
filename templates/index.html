@@ -18,7 +18,7 @@
 {%- set t = total if total and total > 0 else 1 -%}
 <div class="stint">
   <div class="stint-track" role="img"
-       aria-label="Stint จริง {{ stints|length }} stint จาก lap telemetry">
+       aria-label="{{ stints|length }} real stints from lap telemetry">
     {%- for s in stints -%}
     <span class="stint-seg s-{{ (s.compound or 'medium')|lower }}"
           style="width: {{ "%.3f"|format((s.end_lap - s.start_lap + 1) / t * 100) }}%"
@@ -41,8 +41,8 @@
   <div class="stage-top"><span>RaceOpt / Race strategy intelligence</span><span>Data driven. Race ready.</span></div>
   <div class="stage-heading"><p>Every second. Every decision.</p><h1 id="stage-title">THINK <span>FASTER.</span></h1></div>
   <div class="car-view">
-    <img class="car-fallback" src="{{ url_for('static', filename='img/hero-car.jpg') }}" alt="รถแข่ง Formula 1" />
-    <canvas id="race-car" role="img" aria-label="รถแข่ง 3D เคลื่อนไหวอัตโนมัติ">โมเดลรถแข่ง 3D</canvas>
+    <img class="car-fallback" src="{{ url_for('static', filename='img/hero-car.jpg') }}" alt="Formula 1 race car" />
+    <canvas id="race-car" role="img" aria-label="Auto-animated 3D race car">3D race car model</canvas>
   </div>
   <div class="stage-bottom"><span class="stage-caption">01 / Built for the next move</span><a class="stage-explore" href="#intro-title">Explore the strategy <span aria-hidden="true">↓</span></a></div>
 </section>
@@ -51,9 +51,9 @@
 {% block content %}
 <section class="editorial-intro" aria-labelledby="intro-title">
   <p class="eyebrow">The art of race strategy</p>
-  <h2 id="intro-title">ชัยชนะเริ่มต้น<br>ก่อนถึงโค้งแรก</h2>
-  <p>อ่านเกมจากข้อมูลจริง ค้นหาจังหวะเข้าพิทที่ใช่ และทดลองกลยุทธ์ของคุณเอง จากข้อมูลการแข่งขัน Formula 1</p>
-  <div class="hero-actions"><a class="btn" href="{{ url_for('analysis_page') }}">วิเคราะห์กลยุทธ์ <span aria-hidden="true">↗</span></a><a class="btn ghost" href="{{ url_for('play_strategy_page') }}">เปิด Strategy Lab <span aria-hidden="true">→</span></a></div>
+  <h2 id="intro-title">Victory starts<br>before the first corner</h2>
+  <p>Read the race from real data, find the right pit window, and test your own strategies on Formula 1 race data.</p>
+  <div class="hero-actions"><a class="btn" href="{{ url_for('analysis_page') }}">Analyze strategy <span aria-hidden="true">↗</span></a><a class="btn ghost" href="{{ url_for('play_strategy_page') }}">Open Strategy Lab <span aria-hidden="true">→</span></a></div>
 </section>
     {% if analysis %}
     <div class="metrics cols-4 home-readouts" style="margin-top: 24px">
@@ -91,7 +91,7 @@
   <div class="feature-head">
     <h2 class="feature-title" id="feat-h">From the pit wall</h2>
     <a class="btn" href="{{ url_for('analysis_page') }}">
-      เริ่มวิเคราะห์
+      Start analyzing
       <svg class="btn-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
     </a>
   </div>
@@ -101,36 +101,36 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 15l3-4 4 3 5-7"/></svg>
       </span>
       <span class="feature-card-title">Strategy Analysis</span>
-      <span class="feature-card-desc">Grid search กลยุทธ์ยาง/พิทจาก telemetry จริง พร้อม undercut/overcut</span>
+      <span class="feature-card-desc">Grid-search tyre/pit strategies from real telemetry, with undercut/overcut</span>
     </a>
     <a class="feature-card" href="{{ url_for('play_strategy_page') }}">
       <span class="feature-card-icon" aria-hidden="true">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 21V14M4 10V3M12 21V12M12 8V3M20 21V16M20 12V3M1 14h6M9 8h6M17 16h6"/></svg>
       </span>
       <span class="feature-card-title">Strategy Lab</span>
-      <span class="feature-card-desc">จำลองกลยุทธ์ของคุณเองแข่งกับทั้งกริด พร้อม replay รายรอบ</span>
+      <span class="feature-card-desc">Simulate your own strategy against the full grid, with a lap-by-lap replay</span>
     </a>
     <a class="feature-card" href="{{ url_for('drivers_page') }}">
       <span class="feature-card-icon" aria-hidden="true">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-8 8-8s8 3.6 8 8"/></svg>
       </span>
       <span class="feature-card-title">Drivers</span>
-      <span class="feature-card-desc">โปรไฟล์นักแข่ง พร้อมสนามที่ลงแข่งและกลยุทธ์รายสนาม</span>
+      <span class="feature-card-desc">Driver profiles with every race entered and per-race strategy</span>
     </a>
     <a class="feature-card" href="{{ url_for('teams_page') }}">
       <span class="feature-card-icon" aria-hidden="true">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
       </span>
       <span class="feature-card-title">Teams</span>
-      <span class="feature-card-desc">รายชื่อทีมและนักแข่งในสังกัด</span>
+      <span class="feature-card-desc">Every team and its drivers</span>
     </a>
   </div>
 </section>
 
 {% if error %}
 <div class="notice notice-bad" role="alert">
-  <p class="notice-title">โหลดข้อมูลสนามล่าสุดไม่สำเร็จ</p>
-  <p>{{ error }} — ส่วนวิเคราะห์ด้านล่างจะยังไม่แสดงผล ลองเลือกสนาม/นักแข่งเองได้ที่ Strategy Analysis</p>
+  <p class="notice-title">Couldn't load the latest race</p>
+  <p>{{ error }} — the analysis below won't be shown. You can still pick a circuit/driver yourself in Strategy Analysis.</p>
 </div>
 {% endif %}
 
@@ -169,7 +169,7 @@
     <div class="panel-body">
       <div class="split">
         <div>
-          <p class="eyebrow muted">กลยุทธ์ที่ดีที่สุดที่หาเจอ</p>
+          <p class="eyebrow muted">Best strategy found</p>
           <div class="row" style="margin-top: 8px">
             {{ seq(analysis.top_faster[0].first_compound, analysis.top_faster[0].second_compound, analysis.top_faster[0].third_compound) }}
             <span class="big">
@@ -182,9 +182,9 @@
           </div>
         </div>
         <div>
-          <p class="eyebrow muted">เร็วกว่าเวลาจริง</p>
+          <p class="eyebrow muted">Faster than real</p>
           <p class="gain-big ok" style="margin-top: 8px">−<span data-countup="{{ "%.2f"|format(analysis.top_faster[0].delta_sec|abs) }}">{{ "%.2f"|format(analysis.top_faster[0].delta_sec|abs) }}</span><span class="big"> s</span></p>
-          <p class="kv" style="margin-top: 6px">−{{ "%.2f"|format(analysis.top_faster[0].delta_pct|abs) }}% ของเวลารวม</p>
+          <p class="kv" style="margin-top: 6px">−{{ "%.2f"|format(analysis.top_faster[0].delta_pct|abs) }}% of total time</p>
         </div>
       </div>
     </div>
@@ -192,7 +192,7 @@
   </div>
   {% endif %}
   <p class="section-sub" style="margin-top: 10px">
-    รายละเอียดกลยุทธ์ทางเลือกทั้งหมดและ parameter ที่ปรับได้ ดูต่อที่
+    See every alternative strategy and adjustable parameter in
     <a href="{{ url_for('analysis_page') }}" style="color: var(--brand); text-decoration: underline">Strategy Analysis</a>
   </p>
   </div>
@@ -209,18 +209,18 @@
   <div class="card-3d">
   <div class="panel glass">
     <div class="panel-head">
-      <h3 class="panel-title">Lap time · จริง vs โมเดลทำนาย</h3>
+      <h3 class="panel-title">Lap time · real vs model prediction</h3>
       <span class="panel-note push">{{ analysis.result.driver }}</span>
     </div>
     <div class="panel-body">
       <div class="chart h-md"><canvas id="homeLapChart"></canvas></div>
       <div class="legend" style="margin-top: 12px">
-        <span><i style="background: #565B6B"></i>เวลาจริง (FastF1)</span>
-        <span><i style="background: #E0143C"></i>เวลาที่โมเดลทำนาย</span>
+        <span><i style="background: #565B6B"></i>Real time (FastF1)</span>
+        <span><i style="background: #E0143C"></i>Model prediction</span>
       </div>
     </div>
     <div class="panel-foot">
-      <p class="hint" style="margin: 0 0 8px">Pit-stop timeline จริงของ {{ analysis.result.driver }}:</p>
+      <p class="hint" style="margin: 0 0 8px">{{ analysis.result.driver }}'s real pit-stop timeline:</p>
       {{ stintbar_multi(analysis.result.total_laps, analysis.result.stints) }}
     </div>
   </div>
@@ -231,8 +231,8 @@
 <section aria-labelledby="cmp-h">
   <div class="section-head">
     <span class="section-no">04</span>
-    <h2 class="section-title" id="cmp-h">เปรียบเทียบกลยุทธ์นักแข่งสองคน</h2>
-    <span class="section-note">{{ analysis.result.race_label }} · กลยุทธ์จริง</span>
+    <h2 class="section-title" id="cmp-h">Two-driver strategy comparison</h2>
+    <span class="section-note">{{ analysis.result.race_label }} · real strategies</span>
   </div>
 
   <div class="panel">
@@ -269,7 +269,7 @@
         </div>
       </div>
     </div>
-    <div class="panel-foot">กลยุทธ์และเวลาเป็นข้อมูลจริงจาก FastF1 — ไม่ใช่การจำลอง</div>
+    <div class="panel-foot">Strategies and times are real FastF1 data — not a simulation</div>
   </div>
 </section>
 {% endif %}
@@ -294,11 +294,11 @@
   </div>
 
   <p class="section-sub">
-    Degradation rate หาจาก linear fit ของเวลาต่อรอบเทียบอายุยาง (ตัด out/in-lap ออก) — ยิ่งค่าเป็นบวกมาก ยางยิ่งเสื่อมเร็ว
+    Degradation rate comes from a linear fit of lap time against tyre age (out/in-laps excluded) — the more positive the value, the faster the tyre wears.
   </p>
 
   <div class="panel">
-    <div class="tbl-wrap" tabindex="0" role="region" aria-label="ตาราง tyre degradation ต่อ stint">
+    <div class="tbl-wrap" tabindex="0" role="region" aria-label="Tyre degradation per stint">
       <table class="tbl">
         <thead>
           <tr>
@@ -324,7 +324,7 @@
         </tbody>
       </table>
     </div>
-    <div class="panel-foot">n/a = stint สั้นเกินไปที่จะประมาณ degradation ได้อย่างน่าเชื่อถือ</div>
+    <div class="panel-foot">n/a = stint too short to estimate degradation reliably</div>
   </div>
   </div>
 </section>
@@ -339,7 +339,7 @@
   </div>
 
   <div class="panel">
-    <div class="tbl-wrap" tabindex="0" role="region" aria-label="ตาราง undercut overcut">
+    <div class="tbl-wrap" tabindex="0" role="region" aria-label="Undercut and overcut table">
       <table class="tbl">
         <thead>
           <tr>
@@ -363,7 +363,7 @@
         </tbody>
       </table>
     </div>
-    <div class="panel-foot">ตารางเต็มและคำอธิบาย tactic แต่ละแบบ ดูที่ Strategy Analysis</div>
+    <div class="panel-foot">Full table and an explanation of each tactic in Strategy Analysis</div>
   </div>
 </section>
 {% endif %}
@@ -377,7 +377,7 @@
   <div class="section-head">
     <span class="section-no">07</span>
     <h2 class="section-title" id="lab-h"><span class="gradient-text">Strategy Lab</span></h2>
-    <span class="section-note">จำลองกลยุทธ์ของคุณเอง</span>
+    <span class="section-note">Simulate your own strategy</span>
   </div>
 
   <div class="card-3d">
@@ -385,15 +385,15 @@
     <div class="panel-body">
       <div class="split">
         <div>
-          <p class="eyebrow muted">ทดลองด้วยตัวเอง</p>
+          <p class="eyebrow muted">Try it yourself</p>
           <p style="margin-top: 8px; color: var(--fg-2); max-width: 52ch">
-            กำหนดยางเริ่มต้น ยางหลังพิท และรอบที่เข้าพิทเอง (รองรับสูงสุด 2 stops) แล้วให้โมเดลจำลอง
-            เวลารวมของคุณเทียบกับนักแข่งทั้งกริดในสนามเดียวกัน พร้อมอันดับและ win probability
+            Set your starting tyre, post-pit tyre and pit laps (up to 2 stops), then let the model simulate
+            your total race time against the full grid at the same circuit, with finishing position and win probability.
           </p>
         </div>
         <div style="display: flex; align-items: center; justify-content: flex-start">
           <a class="btn block" href="{{ url_for('play_strategy_page') }}">
-            เปิด Strategy Lab
+            Open Strategy Lab
             <svg class="btn-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
           </a>
         </div>
@@ -468,7 +468,7 @@
   <div class="section-head">
     <span class="section-no">09</span>
     <h2 class="section-title" id="insight-h">Strategic Insights</h2>
-    <span class="section-note">ทำไมกลยุทธ์นี้ถึงเร็วกว่า</span>
+    <span class="section-note">Why this strategy is faster</span>
   </div>
 
   <div class="defs">
@@ -495,45 +495,45 @@
   <div class="section-head">
     <span class="section-no">10</span>
     <h2 class="section-title" id="gloss-h">Strategy Glossary</h2>
-    <span class="section-note">ศัพท์ที่ใช้บ่อยในหน้านี้</span>
+    <span class="section-note">Terms used on this page</span>
   </div>
 
   <dl class="glossary">
     <div class="glossary-term">
       <dt>Undercut</dt>
-      <dd>เข้าพิทก่อนคู่แข่ง เพื่อใช้ยางใหม่ที่ grip สูงกว่าแซงในช่วงที่คู่แข่งยังไม่เข้าพิท</dd>
+      <dd>Pitting before a rival to use fresh, grippier tyres and pass them while they're still out on old ones.</dd>
     </div>
     <div class="glossary-term">
       <dt>Overcut</dt>
-      <dd>เข้าพิทช้ากว่าคู่แข่ง ใช้ยางเก่า push ต่อ แล้วออกมาเจอแทร็กโล่งพร้อมยางใหม่</dd>
+      <dd>Pitting later than a rival — pushing on old tyres, then rejoining in clear air on fresh ones.</dd>
     </div>
     <div class="glossary-term">
       <dt>Stint</dt>
-      <dd>ช่วงที่วิ่งต่อเนื่องด้วยยางชุดเดียวกัน ก่อนเข้าพิทเปลี่ยนยางครั้งถัดไป</dd>
+      <dd>A continuous run on one set of tyres, until the next pit stop.</dd>
     </div>
     <div class="glossary-term">
       <dt>Tyre Degradation</dt>
-      <dd>อัตราที่เวลาต่อรอบช้าลงเมื่อยางเก่าขึ้น วัดเป็นวินาทีต่อรอบต่ออายุยาง 1 รอบ</dd>
+      <dd>How much slower lap times get as tyres age, in seconds per lap per lap of tyre life.</dd>
     </div>
     <div class="glossary-term">
       <dt>Pit Window</dt>
-      <dd>ช่วงรอบที่การเข้าพิทให้ผลลัพธ์เวลารวมดีที่สุดตามกลยุทธ์ที่ grid search หาได้</dd>
+      <dd>The range of laps where pitting gives the best total race time, per the grid search.</dd>
     </div>
     <div class="glossary-term">
       <dt>Pace Offset</dt>
-      <dd>ค่าคงที่ต่อรอบที่ใช้ calibrate โมเดลให้เวลาที่จำลองได้ตรงกับเวลาจริงของนักแข่งคนนั้น</dd>
+      <dd>A per-lap constant that calibrates the model so simulated time matches that driver's real time.</dd>
     </div>
     <div class="glossary-term">
       <dt>MAE / RMSE</dt>
-      <dd>ค่าความคลาดเคลื่อนเฉลี่ยของโมเดลเทียบเวลาจริง (วินาทีต่อรอบ) ยิ่งน้อยยิ่งแม่นยำ</dd>
+      <dd>The model's average error against real lap times (seconds per lap) — lower is more accurate.</dd>
     </div>
     <div class="glossary-term">
       <dt>Safety Car / VSC</dt>
-      <dd>ช่วงที่ความเร็วถูกจำกัดทั้งสนามหลังเกิดเหตุการณ์ มักเปลี่ยนความคุ้มค่าของการเข้าพิท</dd>
+      <dd>Periods of track-wide speed limits after an incident — often changing whether a pit stop is worth it.</dd>
     </div>
     <div class="glossary-term">
       <dt>Grid Position</dt>
-      <dd>ตำแหน่งออกสตาร์ทจริงของนักแข่ง ใช้เป็นปัจจัยหนึ่งในการจำลองการแข่งขัน</dd>
+      <dd>The driver's real starting position, used as one input to the race simulation.</dd>
     </div>
   </dl>
 </section>
@@ -564,14 +564,14 @@
       labels: lapLabels,
       datasets: [
         {
-          label: "จริง",
+          label: "Real",
           data: actualLaps,
           borderColor: "#565B6B",
           backgroundColor: "#565B6B",
           borderWidth: 1.5, tension: 0, pointRadius: 0, pointHitRadius: 8,
         },
         {
-          label: "ทำนาย (หลัง calibrate)",
+          label: "Predicted (calibrated)",
           data: predLaps,
           borderColor: "#E0143C",
           backgroundColor: "#E0143C",

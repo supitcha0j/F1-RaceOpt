@@ -5,18 +5,18 @@
 
 <header class="page-head">
   <p class="eyebrow">04 / The constructors</p>
-  <h1 class="page-title">ทีมแข่ง</h1>
-  <p class="lede">คนละสี คนละแนวทาง เป้าหมายเดียวกัน — ทำเวลาให้เร็วที่สุด</p>
+  <h1 class="page-title">Teams</h1>
+  <p class="lede">Different colours, different philosophies, one goal — the fastest time possible.</p>
 </header>
 
 {% if not teams %}
 <div class="empty">
-  <p class="empty-title">ยังไม่มีข้อมูลทีม</p>
-  <p class="empty-note">ข้อมูลทีมยังไม่พร้อมให้บริการ</p>
+  <p class="empty-title">No team data yet</p>
+  <p class="empty-note">Team data isn't available yet.</p>
 </div>
 {% else %}
 
-<div class="roster-caption"><span>CONSTRUCTOR DIRECTORY</span><span>{{ teams|length }} ทีม</span></div>
+<div class="roster-caption"><span>CONSTRUCTOR DIRECTORY</span><span>{{ teams|length }} teams</span></div>
 <div class="team-grid">
 {% for t in teams %}
 <article class="team-sheet" style="--team-color:#{{ t.team_colour }}">
@@ -24,7 +24,7 @@
   <div class="team-lineup">{% for d in t.drivers %}
     <a href="{{ url_for('driver_detail_page', code=d.code) }}">{% set photo=driver_photo(d.code) %}{% if photo %}<img src="{{ url_for('static', filename=photo) }}" alt="" loading="lazy" width="64" height="64" />{% endif %}<span><strong>{{ d.full_name }}</strong><small>{{ d.code }}</small></span><b>{{ d.driver_number }}</b></a>
   {% endfor %}</div>
-  <footer><span>{{ t.drivers|length }} นักแข่ง</span><a href="{{ url_for('team_detail_page', slug=t.slug) }}">ดูข้อมูลทีม →</a></footer>
+  <footer><span>{{ t.drivers|length }} drivers</span><a href="{{ url_for('team_detail_page', slug=t.slug) }}">View team →</a></footer>
 </article>
 {% endfor %}
 </div>

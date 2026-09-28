@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="th">
+<html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -1380,16 +1380,16 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='editorial.css') }}" />
   </head>
   <body class="page-{{ request.endpoint or 'not_found' }}">
-    <a class="skip" href="#main">ข้ามไปเนื้อหาหลัก</a>
+    <a class="skip" href="#main">Skip to main content</a>
     <div class="topline"></div>
 
-    <nav class="nav" aria-label="เมนูหลัก">
+    <nav class="nav" aria-label="Main menu">
       <div class="nav-inner">
         <a class="brand" href="{{ url_for('index') }}">
           <img class="brand-logo" src="{{ url_for('static', filename='img/logo-raceopt-transparent.png') }}" alt="RaceOpt" width="2172" height="724" />
           <span class="brand-sub">Random Forest · FastF1</span>
         </a>
-        <button class="nav-toggle" type="button" aria-controls="primary-menu" aria-expanded="false" aria-label="เปิดเมนู">
+        <button class="nav-toggle" type="button" aria-controls="primary-menu" aria-expanded="false" aria-label="Open menu">
           <span aria-hidden="true"></span>
           <span aria-hidden="true"></span>
           <span aria-hidden="true"></span>
@@ -1426,9 +1426,9 @@
       </div>
       <div class="foot-inner foot-disclaimer">
         <p>
-          RaceOpt เป็นแพลตฟอร์มวิเคราะห์อิสระที่จัดทำขึ้นเพื่อการศึกษา ไม่ใช่ผลิตภัณฑ์อย่างเป็นทางการ
-          และไม่มีความเกี่ยวข้อง ไม่ได้รับการรับรอง หรือสังกัดกับ Formula 1, FIA, ทีมแข่งใดๆ หรือเครื่องหมายการค้าที่เกี่ยวข้อง
-          ตัวเลขทั้งหมดเป็นผลจากแบบจำลองทางสถิติ ไม่ใช่การพยากรณ์ผลการแข่งขันจริง
+          RaceOpt is an independent analysis platform built for educational purposes. It is not an official product
+          and is not associated with, endorsed by, or affiliated with Formula 1, the FIA, any racing team, or related trademarks.
+          All figures come from a statistical model, not a forecast of real race results.
         </p>
       </div>
     </footer>

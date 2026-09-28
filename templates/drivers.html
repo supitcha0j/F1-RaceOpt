@@ -5,19 +5,19 @@
 
 <header class="page-head">
   <p class="eyebrow">03 / The grid</p>
-  <h1 class="page-title">นักแข่ง</h1>
-  <p class="lede">รู้จักคนหลังพวงมาลัย เลือกนักแข่งเพื่อย้อนดูการแข่งขันและวิเคราะห์กลยุทธ์รายสนาม</p>
+  <h1 class="page-title">Drivers</h1>
+  <p class="lede">Meet the people behind the wheel. Pick a driver to revisit their races and analyze strategy race by race.</p>
 </header>
 
 {% if not drivers %}
 <div class="empty">
-  <p class="empty-title">ยังไม่มีข้อมูลนักแข่ง</p>
-  <p class="empty-note">ข้อมูลนักแข่งยังไม่พร้อมให้บริการ</p>
+  <p class="empty-title">No driver data yet</p>
+  <p class="empty-note">Driver data isn't available yet.</p>
 </div>
 {% else %}
 
 {% from '_roster.html' import driver_card with context %}
-<div class="roster-caption"><span>DRIVER DIRECTORY</span><span>{{ drivers|length }} นักแข่ง</span></div>
+<div class="roster-caption"><span>DRIVER DIRECTORY</span><span>{{ drivers|length }} drivers</span></div>
 <div class="driver-grid">{% for d in drivers %}{{ driver_card(d) }}{% endfor %}</div>
 
 {% endif %}

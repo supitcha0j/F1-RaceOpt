@@ -6,7 +6,7 @@
 <a href="{{ url_for('drivers_page') }}" class="eyebrow" style="text-decoration: none">← Drivers</a>
 
 <header class="profile-head" style="--team-color:#{{ driver.team_colour }}">
-  <div><p class="eyebrow">{{ driver.team_name }} / {{ driver.code }}</p><h1>{{ driver.full_name }}</h1><p class="profile-meta">{{ races|length }} สนามในตารางการแข่งขัน</p></div>
+  <div><p class="eyebrow">{{ driver.team_name }} / {{ driver.code }}</p><h1>{{ driver.full_name }}</h1><p class="profile-meta">{{ races|length }} races on the calendar</p></div>
   <span class="profile-number" aria-hidden="true">{{ driver.driver_number }}</span>
   {% set photo=driver_photo(driver.code) %}{% if photo %}<img src="{{ url_for('static', filename=photo) }}" alt="{{ driver.full_name }}" width="180" height="180" />{% endif %}
 </header>
@@ -14,13 +14,13 @@
 <section aria-labelledby="races-h" style="margin-top: 28px">
   <div class="section-head">
     <span class="section-no">01</span>
-    <h2 class="section-title" id="races-h">สนามที่ลงแข่งฤดูกาลนี้</h2>
-    <span class="section-note">{{ races|length }} สนาม</span>
+    <h2 class="section-title" id="races-h">Races this season</h2>
+    <span class="section-note">{{ races|length }} races</span>
   </div>
 
   {% if not races %}
   <div class="empty">
-    <p class="empty-title">ไม่พบตารางแข่งของนักแข่งคนนี้</p>
+    <p class="empty-title">No race schedule found for this driver</p>
   </div>
   {% else %}
   <div class="race-directory">
@@ -31,7 +31,7 @@
       <div class="panel-body"><span class="race-order">{{ '%02d'|format(loop.index) }}</span>
         <h3 class="panel-title">{{ r.label }}</h3>
       </div>
-      <div class="panel-foot">เปิด Strategy Analysis →</div>
+      <div class="panel-foot">Open Strategy Analysis →</div>
     </a>
     {% endfor %}
   </div>

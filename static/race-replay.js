@@ -141,8 +141,8 @@ window.createRaceReplay = function (progress) {
   visibility.observe(canvas);
   cameraButton.addEventListener('click',()=>{
     overview=!overview;
-    cameraButton.textContent=overview?'มุมกล้อง: มุมสูง ↙':'มุมกล้อง: ไล่ตาม ↗';
-    cameraButton.setAttribute('aria-label',overview?'เปลี่ยนเป็นมุมกล้องไล่ตาม':'เปลี่ยนเป็นมุมกล้องมุมสูง');
+    cameraButton.textContent=overview?'Camera: overhead ↙':'Camera: chase ↗';
+    cameraButton.setAttribute('aria-label',overview?'Switch to chase camera':'Switch to overhead camera');
     requestDraw();
   });
   motion.addEventListener('change',()=> { duration=0; requestDraw(); });
@@ -155,9 +155,9 @@ window.createRaceReplay = function (progress) {
       const pos=progress.user[lap-1], prev=progress.user[Math.max(0,lap-2)], delta=prev-pos;
       const pit=(progress.pit_laps || []).includes(lap);
       status.textContent='LAP '+lap+' / '+progress.labels.length+' · YOUR POSITION P'+pos;
-      event.textContent=lap===progress.labels.length ? 'CHEQUERED FLAG · P'+pos : pit ? 'PIT STOP · เข้าพิต' : lap===1 ? 'LIGHTS OUT · เริ่มการแข่งขัน' : delta>0 ? '▲ ขึ้น '+delta+' อันดับ' : delta<0 ? '▼ ลดลง '+(-delta)+' อันดับ' : 'รักษาตำแหน่ง · P'+pos;
+      event.textContent=lap===progress.labels.length ? 'CHEQUERED FLAG · P'+pos : pit ? 'PIT STOP · Boxing' : lap===1 ? 'LIGHTS OUT · Race start' : delta>0 ? '▲ Up '+delta+(delta===1?' place':' places') : delta<0 ? '▼ Down '+(-delta)+(delta===-1?' place':' places') : 'Holding position · P'+pos;
       event.style.color=pit?'#6ae4ee':delta<0?'#ffb28c':'#b9ff87';
-      canvas.setAttribute('aria-label','รอบ '+lap+' คุณอยู่อันดับ '+pos+(pit?' กำลังเข้าพิต':'')+' แสดงรถคู่แข่ง '+progress.rivals.length+' คัน');
+      canvas.setAttribute('aria-label','Lap '+lap+', you are P'+pos+(pit?', pitting':'')+', showing '+progress.rivals.length+' rival cars');
       requestDraw();
     },
     setPlaying(value, multiplier=1) {
